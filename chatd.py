@@ -651,7 +651,12 @@ def stage_two():
     """The ears time the clip while the clone is already on the next one."""
     while True:
         key, w, text, path, tokens = TIMING.get()
-        mid, n = key
+        # THE JOB KEY IS FIVE LONG: (mid, n, engine, voice, model). This said `mid, n = key` and threw
+        # "too many values to unpack" on the FIRST job, killing the timing thread for the life of the
+        # process - so every clip request afterwards waited for a worker that was no longer there and
+        # timed out at 200 s, while the same sentence took 1.5 s straight from the model. That is what
+        # made the reading feel broken, not the engine (17.9.2026).
+        mid, n = key[0], key[1]
         try:
             if not tokens:
                 with TIME_LOCK:
