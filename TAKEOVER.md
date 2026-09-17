@@ -17,7 +17,7 @@ not finished.
 ## 2. The clone
 
 ```
-git clone https://github.com/markoboskoauroville/ClaudeMantraChat ~/Developer/ClaudeMantraChat
+git clone https://github.com/markoboskoauroville/CCMC ~/Developer/CCMC
 ```
 
 On Marko's Mac `~/Developer/brain_break/tools/speak` is a symbolic link to this folder, so
@@ -39,11 +39,11 @@ In `~/.claude/settings.json`, merged with whatever is there:
   "remoteControlAtStartup": true,
   "hooks": {
     "SessionStart": [{"hooks": [{"type": "command", "timeout": 20, "statusMessage": "Starting MANTRA CHAT",
-      "command": "/Users/markobosko/.pyenv/shims/python3 /Users/markobosko/Developer/ClaudeMantraChat/chat_hook.py start"}]}],
+      "command": "/Users/markobosko/.pyenv/shims/python3 /Users/markobosko/Developer/CCMC/chat_hook.py start"}]}],
     "UserPromptSubmit": [{"hooks": [{"type": "command", "timeout": 5, "async": true,
-      "command": "/Users/markobosko/.pyenv/shims/python3 /Users/markobosko/Developer/ClaudeMantraChat/chat_hook.py prompt"}]}],
+      "command": "/Users/markobosko/.pyenv/shims/python3 /Users/markobosko/Developer/CCMC/chat_hook.py prompt"}]}],
     "Stop": [{"hooks": [{"type": "command", "timeout": 10, "async": true,
-      "command": "/Users/markobosko/.pyenv/shims/python3 /Users/markobosko/Developer/ClaudeMantraChat/chat_hook.py stop"}]}]
+      "command": "/Users/markobosko/.pyenv/shims/python3 /Users/markobosko/Developer/CCMC/chat_hook.py stop"}]}]
   }
 }
 ```
@@ -54,7 +54,7 @@ added while a session runs are picked up on the next session or after opening `/
 ## 5. First start
 
 ```
-echo '{}' | /Users/markobosko/.pyenv/shims/python3 ~/Developer/ClaudeMantraChat/chat_hook.py start
+echo '{}' | /Users/markobosko/.pyenv/shims/python3 ~/Developer/CCMC/chat_hook.py start
 ```
 
 This starts the server, writes `~/.tspeak/port.txt`, opens the page in Chrome, and prints
@@ -96,8 +96,8 @@ The memory files that carry this live in
 ## 8. Restarting the server
 
 ```
-pkill -f 'ClaudeMantraChat/chatd.py'; sleep 2
-echo '{}' | /Users/markobosko/.pyenv/shims/python3 ~/Developer/ClaudeMantraChat/chat_hook.py start
+pkill -f 'CCMC/chatd.py'; sleep 2
+echo '{}' | /Users/markobosko/.pyenv/shims/python3 ~/Developer/CCMC/chat_hook.py start
 ```
 
 Wait for the old process to be gone before starting, or the new one binds the next port up.

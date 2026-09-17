@@ -66,7 +66,11 @@ def conf():
     return _clone.conf()
 
 
-def set_conf(engine=None, voice=None):
+def set_conf(engine=None, voice=None, model=None):
+    """Marko, 17.9.2026: "just give me a button to work with either of these two models". The model
+    is the SAME setting the rest of the Mac reads (~/.voice/voice.json), so choosing it here chooses it
+    everywhere. A cloned voice is one reference per voice and is shared by every model already - only
+    the rendered cache is per model - so nothing needs syncing when he switches."""
     if not AVAILABLE:
         return conf()
     c = _clone.conf()
@@ -74,8 +78,18 @@ def set_conf(engine=None, voice=None):
         c['engine'] = engine
     if voice and os.path.isfile(os.path.join(_clone.voice_dir(voice), 'ref.wav')):
         c['voice'] = voice
+    if model and model in _clone.MODELS:
+        c['model'] = model
     _clone.save_conf(c)
     return c
+
+
+def models():
+    """The speaking models, by their own names. No word about which is quick: he knows."""
+    if not AVAILABLE:
+        return []
+    return [{'key': k, 'name': _clone.MODELS[k][0].split('/')[-1]}
+            for k in ('qwen06', 'pocket') if k in _clone.MODELS]
 
 
 def voices():

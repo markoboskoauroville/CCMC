@@ -17,6 +17,7 @@ colour only on the word, instant jumps and never a smooth scroll.
 
 CSS = r"""
 :root{--bg:#FAFAFA;--panel:#FFFFFF;--ink:#101010;--dim:#6b6b6b;--line:#dcdcdc;--slate:#c9c9c9;
+--strong:#000;--hover:#F1F1F1;--code-bg:#F4F4F4;--code-head:#EAEAEA;--link:#2744C7;--good:#00821F;--mine:#F2F6EE;
 --amber:#B43C2A;--sent:#EDEDED;--sent-fg:#101010;--wordbg:#D93025;--wordfg:#FFFFFF;--gold:38.2vw}
 *{box-sizing:border-box}
 /* THE TERMINAL'S OWN LOOK (Marko, 17.9.2026: "your Claude code has beautiful output. It has good
@@ -49,10 +50,10 @@ body.open #side{width:var(--gold);min-width:280px}
 #top .t{font:700 12px/1 Monaco,Menlo,monospace;letter-spacing:.16em;color:var(--amber)}
 #top .p{font:12px/1.3 Monaco,Menlo,monospace;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #dot{width:9px;height:9px;border-radius:50%;background:#B43C2A}
-#dot.on{background:#00821F}
+#dot.on{background:var(--good)}
 #list{flex:1;overflow:auto;padding:22px 16px 24px}
 .msg{max-width:900px;margin:0 auto 18px;padding:14px 18px;border-radius:10px;background:var(--panel);border:1px solid var(--line)}
-.msg.marko{background:#F2F6EE;border-color:#d7e3cc}
+.msg.marko{background:var(--mine);border-color:var(--line)}
 .msg.system{background:transparent;border:0;text-align:center;padding:4px;font:12px/1.4 Monaco,Menlo,monospace;color:var(--dim)}
 .msg .who{font:700 10.5px/1 Monaco,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin-bottom:8px;display:flex;gap:10px;align-items:baseline}
 .msg.marko .who{color:#00821f}
@@ -62,56 +63,60 @@ body.open #side{width:var(--gold);min-width:280px}
    multiple code boxes for each of your steps ... Code box I have read ... the same aesthetics as here").
    The card is no longer one wall of text: a heading, a paragraph, a list, a table and a code block are
    each a box he can read on its own. */
-.msg .body .blk{border:1px solid transparent;border-radius:10px;margin:0 0 6px;padding:6px 8px;position:relative}
-.msg .body .blk:hover{border-color:var(--line);background:#F2F2F2}
-.msg .body .blk .blkfoot{display:none;gap:8px;align-items:center;margin-top:6px}
-.msg .body .blk:hover .blkfoot,.msg .body .blk.reading .blkfoot{display:flex}
-.msg .body .blk.reading{border-color:var(--amber)}
+/* THE BLOCK IS THE BUTTON. Hover only tints it - no border appears, nothing is inserted, no line
+   shifts by a pixel (Marko, 17.9.2026: "everything is vibrating. I'm going to get epilepsy"). The
+   border is always there and always the same width; only its colour changes. */
+.msg .body .blk{border-left:3px solid transparent;border-radius:6px;margin:0 0 4px;padding:4px 10px;
+  position:relative;cursor:pointer;transition:background .12s linear,border-color .12s linear}
+.msg .body .blk:hover{background:var(--hover)}
+.msg .body .blk.reading{border-left-color:var(--amber);background:var(--hover)}
+.msg .body .blkst{display:block;font-size:10px;color:var(--dim);min-height:0}
+.msg .body .blkst:empty{display:none}
 .msg .body .blkin{white-space:normal}
 .msg .body p{margin:0 0 2px;white-space:pre-wrap}
 .msg .body .h1,.msg .body .h2,.msg .body .h3,.msg .body .h4,.msg .body .h5,.msg .body .h6{
-  color:#101010;font-weight:700;letter-spacing:.01em;margin:2px 0}
+  color:var(--strong);font-weight:700;letter-spacing:.01em;margin:2px 0}
 .msg .body .h1{font-size:23px}
 .msg .body .h2{font-size:20px}
-.msg .body .h3,.msg .body .h4,.msg .body .h5,.msg .body .h6{font-size:16px;color:#B43C2A}
+.msg .body .h3,.msg .body .h4,.msg .body .h5,.msg .body .h6{font-size:16px;color:var(--amber)}
 .msg .body ul,.msg .body ol{margin:2px 0 2px 2px;padding-left:22px}
 .msg .body li{margin:2px 0}
 .msg .body blockquote{margin:2px 0;padding-left:12px;border-left:3px solid var(--slate);color:var(--dim)}
 .msg .body hr{border:0;border-top:1px solid var(--line);margin:8px 0}
-.msg .body a{color:#2744C7}
+.msg .body a{color:var(--link)}
 /* a code box, with its language on a bar, like a terminal block */
-.msg .body .cb{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#F4F4F4;margin:4px 0}
+.msg .body .cb{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--code-bg);margin:4px 0}
 .msg .body .cbh{font:600 10px/1 Monaco,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--dim);padding:7px 12px;background:#EAEAEA;border-bottom:1px solid var(--line)}
+  color:var(--dim);padding:7px 12px;background:var(--code-head);border-bottom:1px solid var(--line)}
 .msg .body pre{margin:0;background:transparent;border:0;border-radius:0;padding:11px 13px;overflow:auto;
-  font:13.5px/1.55 Monaco,Menlo,monospace;color:#101010;white-space:pre}
-.msg .body code{background:#EFEFEF;border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:14px;font-family:Monaco,Menlo,monospace;color:#B43C2A}
+  font:13.5px/1.55 Monaco,Menlo,monospace;color:var(--ink);white-space:pre}
+.msg .body code{background:var(--code-bg);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:14px;font-family:Monaco,Menlo,monospace;color:var(--amber)}
 .msg .body .cb code{border:0;padding:0;background:transparent}
 /* a real table */
 .msg .body .tw{overflow-x:auto;margin:2px 0}
 .msg .body table{border-collapse:collapse;font-size:15px;min-width:min(100%,420px)}
 .msg .body th,.msg .body td{border:1px solid var(--line);padding:6px 11px;text-align:left;vertical-align:top}
-.msg .body th{background:#EAEAEA;color:#101010;font:600 11px/1.3 Monaco,Menlo,monospace;
+.msg .body th{background:var(--code-head);color:var(--strong);font:600 11px/1.3 Monaco,Menlo,monospace;
   letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
 .rd.sm{font-size:9.5px;padding:5px 10px}
 .rd.sm.ghost{background:transparent;color:var(--dim);border:1px solid var(--slate)}
-.msg .body b{color:#101010;font-weight:700}
+.msg .body b{color:var(--strong);font-weight:700}
 .msg .foot{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 .msg.reading{border-color:var(--amber)}
-.rd{background:#101010;color:#FAFAFA;border:0;border-radius:6px;font:700 11px/1 Monaco,Menlo,monospace;
+.rd{background:var(--strong);color:var(--panel);border:0;border-radius:6px;font:700 11px/1 Monaco,Menlo,monospace;
   letter-spacing:.12em;padding:9px 14px;cursor:pointer}
-.rd.on{background:#B43C2A;color:#fff}
+.rd.on{background:var(--amber);color:var(--panel)}
 .st{font:11px/1.4 Monaco,Menlo,monospace;color:var(--dim)}
 .st.bad{color:#B43C2A}
 /* the teleprompter: the Beatrice window. Floating, dragged by its grip, resized from its corner,
    its scrollbar hidden; the sentence being read is pushed to the top edge inside it. */
-#tp{background:#FFFFFF;position:fixed;left:50%;top:18px;transform:translateX(-50%);width:min(92vw,900px);height:46vh;display:none;
-  min-width:320px;min-height:160px;resize:both;background:#FFFFFF;border:1px solid var(--slate);border-radius:12px;
+#tp{background:var(--panel);position:fixed;left:50%;top:18px;transform:translateX(-50%);width:min(92vw,900px);height:46vh;display:none;
+  min-width:320px;min-height:160px;resize:both;background:var(--panel);border:1px solid var(--slate);border-radius:12px;
   box-shadow:0 20px 60px rgba(0,0,0,.6);z-index:20;overflow:hidden}
 #tp.on{display:block}
 #tp.drag{cursor:grabbing}
 #tpgrip{position:absolute;left:0;right:0;top:0;height:26px;display:flex;align-items:center;gap:10px;padding:0 14px;
-  cursor:grab;user-select:none;touch-action:none;z-index:2;background:linear-gradient(#FAFAFA,rgba(250,250,250,0))}
+  cursor:grab;user-select:none;touch-action:none;z-index:2;background:linear-gradient(var(--panel),transparent)}
 #tpgrip .dots{width:22px;height:8px;border-top:2px dotted var(--dim);border-bottom:2px dotted var(--dim)}
 #tpgrip .who{font:700 10px/1 Monaco,Menlo,monospace;letter-spacing:.16em;color:var(--amber)}
 #tpgrip .cnt{font:10px/1 Monaco,Menlo,monospace;color:var(--dim);margin-left:auto}
@@ -136,11 +141,11 @@ body.open #side{width:var(--gold);min-width:280px}
    is moved into the foot of the card being read, and shown only there. */
 /* No frame (Marko, 8.9.2026: "just put buttons directly in the interface without this frame, and
    maximize the buttons so I can see them"): bare buttons in the card's foot, large. */
-#pill{background:#FFFFFF;display:none;align-items:center;gap:6px;background:transparent;border:0;padding:0;user-select:none;flex-wrap:wrap}
+#pill{background:var(--panel);display:none;align-items:center;gap:6px;background:transparent;border:0;padding:0;user-select:none;flex-wrap:wrap}
 #pill.on{display:inline-flex}
 #pill button{background:var(--slate);color:var(--ink);border:0;border-radius:10px;width:44px;height:38px;
   font:700 17px/1 Monaco,Menlo,monospace;cursor:pointer;display:flex;align-items:center;justify-content:center}
-#pill button:hover{background:#E4E4E4}
+#pill button:hover{background:var(--hover)}
 #pill #pp{background:var(--amber);color:#FAFAFA;width:56px}
 #pill #px{color:#B43C2A}
 #pill .v{font:700 14px/1 Monaco,Menlo,monospace;color:var(--amber);min-width:44px;text-align:center}
@@ -155,7 +160,7 @@ body.open #side{width:var(--gold);min-width:280px}
 #grip i{display:block;width:56px;height:4px;border-radius:2px;background:var(--slate)}
 #grip:hover i,#grip.drag i{background:var(--amber)}
 #composer .in{max-width:860px;margin:0 auto;width:100%;flex:1;min-height:0;display:flex;flex-direction:column}
-#rt{width:100%;flex:1;min-height:40px;background:#FFFFFF;color:var(--ink);border:1px solid var(--slate);border-radius:12px;
+#rt{width:100%;flex:1;min-height:40px;background:var(--panel);color:var(--ink);border:1px solid var(--slate);border-radius:12px;
   padding:12px 14px;font:17px/1.5 inherit;resize:none;outline:none}
 #rt:focus{border-color:var(--amber)}
 #composer .row{display:flex;align-items:center;gap:12px;margin-top:8px;padding-right:48px}
@@ -169,20 +174,20 @@ body.open #side{width:var(--gold);min-width:280px}
 #empty{text-align:center;color:var(--dim);padding:60px 20px;font-size:15px}
 /* TALK: the microphone button beside SEND, green when it waits, red and pulsing while it listens,
    amber while Whisper writes; a small level bar so he sees he is heard; CANCEL while listening. */
-#talk{background:#00821F;color:#FAFAFA;border:0;border-radius:999px;font:700 12px/1 Monaco,Menlo,monospace;
+#talk{background:var(--good);color:#FAFAFA;border:0;border-radius:999px;font:700 12px/1 Monaco,Menlo,monospace;
   letter-spacing:.1em;padding:12px 18px;cursor:pointer;transition:background .2s;min-width:96px}
 #talk.listening{background:#B43C2A;color:#fff;animation:pulse 1.2s infinite}
 #talk.thinking{background:#C7C400;color:#101010}
 #cancel{background:#F6E9E7;color:#B43C2A;border:0;border-radius:999px;font:700 11px/1 Monaco,Menlo,monospace;
   letter-spacing:.1em;padding:12px 14px;cursor:pointer}
 #cancel:hover{background:#B43C2A;color:#fff}
-#vu{width:64px;height:10px;border-radius:5px;background:#E4E4E4;border:1px solid var(--line);overflow:hidden;position:relative;flex:none}
+#vu{width:64px;height:10px;border-radius:5px;background:var(--hover);border:1px solid var(--line);overflow:hidden;position:relative;flex:none}
 #vu i{position:absolute;left:0;top:0;bottom:0;width:0;transition:width .08s linear;
   background:linear-gradient(90deg,#00821F 0,#00821F 60%,#C7C400 80%,#B43C2A 100%)}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(226,59,78,.5)}70%{box-shadow:0 0 0 10px rgba(226,59,78,0)}100%{box-shadow:0 0 0 0 rgba(226,59,78,0)}}
 /* EVERY OPTION LIVES UNDER THE GEAR (Marko, 10.9.2026: "voice, auto voice, clone my voice ... all
    options ... only live under the gear icon"): nothing in the top bar, nothing in the side pane. */
-#auto.on{color:#00821F;border-color:#00821F}
+#auto.on{color:var(--good);border-color:var(--good)}
 #voices{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
 #voices .b.on{background:var(--amber);color:#FAFAFA;border-color:var(--amber)}
 #vst{font:12px/1.5 Monaco,Menlo,monospace;color:var(--dim);min-height:18px}
@@ -194,7 +199,7 @@ body.open #side{width:var(--gold);min-width:280px}
 #gear svg{width:20px;height:20px}
 #gear:hover,#gear.on{color:var(--amber);border-color:var(--amber)}
 #settings{display:none;position:absolute;right:16px;bottom:60px;width:min(92vw,440px);max-height:calc(100vh - 80px);overflow:auto;
-  background:#FFFFFF;border:1px solid var(--slate);border-radius:12px;padding:16px 16px 12px;z-index:30;box-shadow:0 14px 40px rgba(0,0,0,.14)}
+  background:var(--panel);border:1px solid var(--slate);border-radius:12px;padding:16px 16px 12px;z-index:30;box-shadow:0 14px 40px rgba(0,0,0,.14)}
 #settings.on{display:block}
 #settings h3{font:700 10.5px/1 Monaco,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin:12px 0 8px}
 #settings h3:first-child{margin-top:0}
@@ -272,6 +277,53 @@ function pane(open){
 }
 document.getElementById('pOpen').onclick = () => pane(true);
 document.getElementById('pHide').onclick = () => pane(false);
+
+/* SIX COLOUR SCHEMES (Marko, 17.9.2026: "there are different six color schemes for this chat. They
+   are also displayed by the styling of this button, so I know what I'm selecting"). Each button is
+   painted in the scheme it selects, so the choice is seen and not read. The first is his terminal,
+   measured from the iTerm profile "Claude hub". */
+const SCHEMES = {
+  terminal:{name:'TERMINAL',bg:'#FAFAFA',panel:'#FFFFFF',ink:'#101010',dim:'#6b6b6b',line:'#dcdcdc',slate:'#c9c9c9',accent:'#B43C2A',strong:'#000000',hover:'#F1F1F1','code-bg':'#F4F4F4','code-head':'#EAEAEA',link:'#2744C7',good:'#00821F',mine:'#F2F6EE'},
+  paper:   {name:'PAPER',   bg:'#F6F2E9',panel:'#FFFDF7',ink:'#1f1a12',dim:'#7a7365',line:'#e2dccd',slate:'#cdc5b2',accent:'#9a5b14',strong:'#120e08',hover:'#EFE9DB','code-bg':'#F0EADB','code-head':'#E6DFCC',link:'#2a5ea8',good:'#3f6b2a',mine:'#FBF7EC'},
+  night:   {name:'NIGHT',   bg:'#0b0d10',panel:'#10141a',ink:'#e6e9ee',dim:'#8b93a1',line:'#1f2630',slate:'#33404f',accent:'#e2a03f',strong:'#ffffff',hover:'#171c24','code-bg:':'#0a0c10','code-bg':'#0a0c10','code-head':'#161b23',link:'#7aa2f7',good:'#57c97a',mine:'#141a14'},
+  ink:     {name:'INK',     bg:'#12141c',panel:'#181b25',ink:'#dfe3f0',dim:'#8a90a6',line:'#262b39',slate:'#3a4256',accent:'#c792ea',strong:'#ffffff',hover:'#1f2331','code-bg':'#101320','code-head':'#1c2030',link:'#82aaff',good:'#7fd88f',mine:'#1a2130'},
+  forest:  {name:'FOREST',  bg:'#F2F6EE',panel:'#FFFFFF',ink:'#14200f',dim:'#6a7a60',line:'#d7e3cc',slate:'#b6c7a8',accent:'#2f6f2f',strong:'#0a1407',hover:'#E9F0E2','code-bg':'#EDF3E7','code-head':'#E0EAD7',link:'#2f5fa8',good:'#00821F',mine:'#FBFDF9'},
+  slate:   {name:'SLATE',   bg:'#EEF1F4',panel:'#FFFFFF',ink:'#111820',dim:'#66707c',line:'#d5dce3',slate:'#b6c0ca',accent:'#2744C7',strong:'#05090d',hover:'#E4E9EF','code-bg':'#EAEFF4',' code-head':'#DDE4EB','code-head':'#DDE4EB',link:'#1b5fbe',good:'#0a7d3c',mine:'#F7FAFC'}
+};
+let SCHEME = 'terminal';
+try { SCHEME = localStorage.getItem('mantra.scheme') || 'terminal'; } catch(e){}
+/* THE CLICK REPAINTS EVERYTHING, AT ONCE (Marko, 17.9.2026: "please do a real-time update when I'm
+   changing the look of my chat. When I click on the button, it should change the look"). Every colour
+   in the card and the page is a variable, so setting them here is the whole change - no reload. */
+function applyScheme(k){
+  const c = SCHEMES[k] || SCHEMES.terminal; SCHEME = k;
+  const r = document.documentElement.style;
+  r.setProperty('--bg', c.bg);          r.setProperty('--panel', c.panel);
+  r.setProperty('--ink', c.ink);        r.setProperty('--dim', c.dim);
+  r.setProperty('--line', c.line);      r.setProperty('--slate', c.slate);
+  r.setProperty('--amber', c.accent);   r.setProperty('--strong', c.strong);
+  r.setProperty('--hover', c.hover);    r.setProperty('--code-bg', c['code-bg']);
+  r.setProperty('--code-head', c['code-head']); r.setProperty('--link', c.link);
+  r.setProperty('--good', c.good);      r.setProperty('--mine', c.mine);
+  r.setProperty('--sent', c.hover);     r.setProperty('--sent-fg', c.ink);
+  try { localStorage.setItem('mantra.scheme', k); } catch(e){}
+  paintSchemes();
+}
+function paintSchemes(){
+  const box = document.getElementById('schemes'); if (!box) return;
+  box.innerHTML = '';
+  Object.keys(SCHEMES).forEach(k => {
+    const c = SCHEMES[k];
+    const b = document.createElement('button');
+    b.className = 'b ghost' + (k === SCHEME ? ' on' : '');
+    b.textContent = c.name;
+    b.style.background = c.panel; b.style.color = c.ink;
+    b.style.borderColor = k === SCHEME ? c.accent : c.line;
+    b.style.boxShadow = 'inset 0 -3px 0 ' + c.accent;
+    b.onclick = () => applyScheme(k);
+    box.appendChild(b);
+  });
+}
 
 /* ---------------------------------------------------------- rendering */
 function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -375,20 +427,18 @@ function add(m, scroll){
     el.querySelectorAll('.blk').forEach((bl, n) => {
       const b = blocks[n];
       if (!b || !b.text) return;
-      const foot = document.createElement('div'); foot.className = 'blkfoot';
-      if (b.kind === 'code'){
-        const cp = document.createElement('button'); cp.className = 'rd sm ghost'; cp.textContent = 'COPY';
-        cp.onclick = ev => { ev.stopPropagation();
-          navigator.clipboard.writeText(b.text).then(() => { cp.textContent = 'COPIED'; setTimeout(() => cp.textContent = 'COPY', 1200); })
-            .catch(() => { cp.textContent = 'NO'; setTimeout(() => cp.textContent = 'COPY', 1200); }); };
-        foot.appendChild(cp);
-      }
-      const rd = document.createElement('button'); rd.className = 'rd sm'; rd.textContent = 'READ';
-      const st = document.createElement('span'); st.className = 'st';
-      rd.onclick = ev => { ev.stopPropagation();
-        readPlan('/api/read/draft/plan', {text: b.text}, bl.querySelector('.blkin'), rd, st); };
-      foot.appendChild(rd); foot.appendChild(st);
-      bl.appendChild(foot);
+      /* NO BUTTON, AND NOTHING THAT MOVES (Marko, 17.9.2026: "when I hover over the read button popping
+         up, it's so annoying because then the text is moving and everything is vibrating ... All I want
+         to do with these outputs from the chat is to read them. If I click ... it starts to read it").
+         The block IS the button. Hover only tints it; nothing is inserted, so no line ever shifts. The
+         controls are the floating pill, which already has previous, play, next, speed, size and close. */
+      const st = document.createElement('span'); st.className = 'st blkst';
+      bl.appendChild(st);
+      bl.addEventListener('click', ev => {
+        if (ev.target.closest('a')) return;
+        if (current && current.msgEl === bl.querySelector('.blkin')){ current.toggle(); return; }
+        readPlan('/api/read/draft/plan', {text: b.text}, bl.querySelector('.blkin'), null, st);
+      });
     });
     if (m.role === 'claude') lastClaude = m.id;
     {   /* READ on every card, his and mine */
@@ -479,7 +529,7 @@ function hidePill(){ pill.classList.remove('on'); }
    in order and deletes the sentence just heard; the page keeps three requests in flight (a browser
    allows six connections, and the event stream is one) and lets go of every clip before i. A STOP
    aborts what is in flight and asks for nothing more. */
-const WORD_LEAD = 0.02, HANDOFF_LEAD = 0.06, AHEAD = 3;
+const WORD_LEAD = 0.02, HANDOFF_LEAD = 0.06, AHEAD = 5;   /* 5 kept in front, 1 waited for (17.9.2026) */
 class Reader {
   constructor(plan, msgEl, btn, st){
     this.n = plan.count; this.texts = plan.sents; this.mid = plan.id;
@@ -504,7 +554,7 @@ class Reader {
     });
     this.a.addEventListener('loadedmetadata', () => { const c = this.clips[this.ci]; if (c && c.prop && isFinite(this.a.duration)) this.scale = this.a.duration; });
     this.a.addEventListener('ended', () => { if (this.dead) return; if (!this.handed) this.next(); });
-    this.a.addEventListener('play', () => { pp.textContent = '❚❚'; btn.textContent = 'READING'; btn.classList.add('on'); });
+    this.a.addEventListener('play', () => { pp.textContent = '❚❚'; if (btn){ btn.textContent = 'READING'; btn.classList.add('on'); } });
     this.a.addEventListener('pause', () => { if (!this.a.ended) pp.textContent = '▶'; });
   }
   /* fill sentence i with word spans once its clip is here */
@@ -546,13 +596,16 @@ class Reader {
   note(){ tpNote((this.made != null ? this.made : this.have(this.ci + 1)) + ' cached ahead · ' + (this.ci + 1) + ' / ' + this.n); }
   /* how many of sentences i, i+1, i+2 are here */
   have(i){ let c = 0; for (let k = i; k < Math.min(this.n, i + AHEAD); k++) if (this.clips[k]) c++; return c; }
-  /* the first start waits for three (or all that remain); after that one sentence is enough,
-     so a drained cache gives short gaps rather than one long one */
-  ready(i){ return this.primed ? !!this.clips[i] : this.have(i) >= Math.min(AHEAD, this.n - i); }
+  /* IT SPEAKS ON THE FIRST SENTENCE (Marko, 17.9.2026: "It works like a kindergarten toy ... we did
+     measurements how many sentences need to be generated before it starts to speak, so there is no
+     delay"). The old rule waited for THREE before the first word, so every reading began with three
+     sentences' worth of silence. One is enough to begin: the rest are made while that one is spoken,
+     and the look-ahead below keeps the queue full, which is the whole point of a pipeline. */
+  ready(i){ return !!this.clips[i]; }
   /* play sentence i now, or wait for it, and ask for the three after */
   start(i){
     if (i >= this.n){ this.finish(); return; }
-    if (!this.ready(i)){ this.waiting = i; this.ahead(i); tpNote(this.primed ? 'caching next sentence…' : 'asking ' + vlabel() + ' for three sentences…'); return; }
+    if (!this.ready(i)){ this.waiting = i; this.ahead(i); tpNote('making the first sentence…'); return; }
     this.primed = true;
     for (let k = 0; k < i; k++) this.clips[k] = null;                 /* the finished ones are let go */
     document.getElementById('tpcnt').textContent = (i + 1) + ' / ' + this.n;
@@ -618,13 +671,15 @@ class Reader {
   }
   jumpTo(i){ this.a.pause(); this.start(i); }
   skip(d){ const i = Math.max(0, Math.min(this.n - 1, (this.ci < 0 ? 0 : this.ci) + d)); this.a.pause(); this.start(i); }
-  finish(){ pp.textContent = '↺'; this.btn.textContent = 'READ AGAIN'; this.ci = this.n - 1; }
+  finish(){ pp.textContent = '↺'; if (this.btn) this.btn.textContent = 'READ AGAIN'; this.ci = this.n - 1; }
   destroy(){ this.dead = true; this.ctls.forEach(c => { try { c.abort(); } catch(e){} });
     try { this.a.pause(); } catch(e){} this.a.removeAttribute('src'); this.a.remove();
     if (this.raf) cancelAnimationFrame(this.raf); this.raf = null;
     this.doc.innerHTML = this.orig; this.doc.style.fontSize = '';           /* the card as it was */
     if (this.draft){ draftdoc.style.display = 'none'; rt.style.display = ''; }
-    this.btn.textContent = 'READ'; this.btn.classList.remove('on'); this.msgEl.classList.remove('reading'); }
+    if (this.btn){ this.btn.textContent = 'READ'; this.btn.classList.remove('on'); }
+    this.msgEl.classList.remove('reading');
+    const blk = this.msgEl.closest ? this.msgEl.closest('.blk') : null; if (blk) blk.classList.remove('reading'); }
 }
 function openTP(msgEl){
   document.querySelectorAll('.msg.reading').forEach(e => e.classList.remove('reading'));
@@ -666,7 +721,8 @@ function readPlan(url, payload, el, btn, st, startKey, startAt){
   endReading();
   st.textContent = ''; st.className = st.id === 'rs' ? '' : 'st'; noteEl = st;
   openTP(el); showPill(btn);
-  tpNote('asking ' + vlabel() + '…'); btn.textContent = 'WAITING'; btn.classList.add('on');
+  tpNote('asking ' + vlabel() + '…'); if (btn){ btn.textContent = 'WAITING'; btn.classList.add('on'); }
+  { const blk = el.closest ? el.closest('.blk') : null; if (blk) blk.classList.add('reading'); }
   pending = new AbortController();
   const ctl = pending;
   fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload || {}), signal: ctl.signal})
@@ -752,11 +808,30 @@ function paintVoice(){
    AUTO VOICE, CLONE MY VOICE, claude.ai beside, the top bar. At the lower right corner of the entry
    band, where the hand already is. */
 const gear = document.getElementById('gear'), panel = document.getElementById('settings');
-function togglePanel(on){ const want = on == null ? !panel.classList.contains('on') : on; panel.classList.toggle('on', want); gear.classList.toggle('on', want); if (want) paintVoice(); }
+function togglePanel(on){ const want = on == null ? !panel.classList.contains('on') : on; panel.classList.toggle('on', want); gear.classList.toggle('on', want); if (want){ paintVoice(); paintEngines(); paintSchemes(); } }
 gear.onclick = () => togglePanel();
 document.addEventListener('pointerdown', e => { if (panel.classList.contains('on') && !panel.contains(e.target) && !gear.contains(e.target)) togglePanel(false); });
 
-function loadVoice(){ return fetch('/api/voice').then(r => r.json()).then(j => { VOICE = j; paintVoice(); }).catch(() => {}); }
+/* TWO ENGINES, A BUTTON EACH (Marko, 17.9.2026: "just give me a button to work with either of these
+   two models"). The names are the models' own; nothing explains which is quick, because he knows. */
+function paintEngines(){
+  const box = document.getElementById('engines'); if (!box) return;
+  box.innerHTML = '';
+  (VOICE.models || [{key:'qwen06', name:'Qwen3-TTS-12Hz-0.6B-Base-8bit'}, {key:'pocket', name:'pocket-tts'}]).forEach(m => {
+    const b = document.createElement('button');
+    b.className = 'b ghost' + (VOICE.model === m.key ? ' on' : '');
+    b.textContent = m.name;
+    b.onclick = () => setModel(m.key);
+    box.appendChild(b);
+  });
+}
+function setModel(key){
+  vst.textContent = 'switching engine…';
+  fetch('/api/voice', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({model: key})})
+    .then(r => r.json()).then(j => { VOICE = j; paintVoice(); paintEngines(); vst.textContent = 'Engine: ' + (j.model || key); })
+    .catch(() => { vst.textContent = 'Server not reachable.'; });
+}
+function loadVoice(){ return fetch('/api/voice').then(r => r.json()).then(j => { VOICE = j; paintVoice(); paintEngines(); }).catch(() => {}); }
 /* A NEW VOICE TAKES OVER AT ONCE (Marko, 10.9.2026: "if there is some reading going on, it deletes old
    and starts with new voice"): what is being read goes on from the sentence it was at, in the new voice. */
 function setVoice(name){
@@ -771,6 +846,7 @@ function setVoice(name){
     .catch(() => { vst.textContent = 'Server not reachable.'; });
 }
 autoBtn.onclick = () => { AUTO = !AUTO; try { localStorage.setItem('mantra.auto', AUTO ? '1' : '0'); } catch(e){} paintVoice(); };
+applyScheme(SCHEME);
 loadVoice();
 
 /* THE MICROPHONE. TALK or the space bar opens it; TALK or the space bar again sends: the recording
@@ -907,6 +983,14 @@ if (/gear/.test(location.search)) togglePanel(true);          /* a render with t
 
 HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>MANTRA CHAT</title>
+<!-- THE PAGE OWNS ITS OWN COLOURS. MEASURED 17.9.2026 in his Chrome: the Dark Reader extension was
+     injecting darkreader--variables, darkreader--root-vars and darkreader--override, repainting every
+     colour the page set. His six schemes were being applied correctly and then overpainted, which is
+     why choosing one appeared to do nothing and why the light terminal look came back dark. Dark
+     Reader honours this lock and leaves a page that declares it alone; `color-scheme` tells the
+     browser the same, so Chrome's own auto-darkening stays off too. -->
+<meta name="darkreader-lock">
+<meta name="color-scheme" content="light dark">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PHJlY3Qgd2lkdGg9JzMyJyBoZWlnaHQ9JzMyJyByeD0nNycgZmlsbD0nIzBiMGQxMCcvPjxwYXRoIGQ9J002IDYuNWgyMGEzLjIgMy4yIDAgMCAxIDMuMiAzLjJ2OWEzLjIgMy4yIDAgMCAxLTMuMiAzLjJIMTVsLTYuMiA0LjJ2LTQuMkg2YTMuMiAzLjIgMCAwIDEtMy4yLTMuMnYtOUEzLjIgMy4yIDAgMCAxIDYgNi41eicgZmlsbD0nI2YyZGRiNCcvPjxjaXJjbGUgY3g9JzExLjMnIGN5PScxNC4yJyByPScyLjEnIGZpbGw9JyMwYjBkMTAnLz48Y2lyY2xlIGN4PScxNycgY3k9JzE0LjInIHI9JzIuMScgZmlsbD0nI2UyM2I0ZScvPjxjaXJjbGUgY3g9JzIyLjcnIGN5PScxNC4yJyByPScyLjEnIGZpbGw9JyMwYjBkMTAnLz48L3N2Zz4=">
 <style>%(css)s</style></head><body>
 <aside id="side"><div class="in">
@@ -928,10 +1012,15 @@ HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <div class="row"><button id="talk" title="the space bar, too">TALK</button><span id="vu"><i></i></span><button id="cancel" title="Escape" hidden>✕</button><button id="send">SEND TO CLAUDE</button><button id="rdraft" class="rd">READ</button><span id="rs"></span></div></div>
 <button id="gear" title="settings">%(gear)s</button>
 <div id="settings">
+<!-- GENERAL FIRST, THEN TWO, THEN SIX (Marko, 17.9.2026: "general settings should be at the top ...
+     then under that I have two ... After two, we have six options"). Nothing here explains which
+     engine is which: he knows, and being told again is noise. -->
+<h3>GENERAL</h3><div class="btns"><button class="b ghost" id="auto">AUTO VOICE</button></div>
+<h3>ENGINE</h3><div class="btns" id="engines"></div>
+<h3>COLOURS</h3><div class="btns" id="schemes"></div>
 <h3>VOICE</h3><div id="voices"></div>
 <div class="btns"><button class="b ghost" id="cloneme">CLONE MY VOICE · 15 SECONDS</button></div>
 <p id="vst"></p>
-<h3>SPEAKING THE ANSWERS</h3><div class="btns"><button class="b ghost" id="auto">AUTO VOICE</button></div>
 <h3>CLAUDE.AI BESIDE</h3><div class="btns"><button class="b ghost" id="pOpen">OPEN CLAUDE.AI BESIDE</button><button class="b ghost" id="pHide">HIDE IT</button>
 <a class="b ghost" href="https://claude.ai/new" target="_blank" rel="noopener">NEW CHAT ON CLAUDE.AI</a>
 <a class="b ghost" id="sesslink" href="#" target="_blank" rel="noopener" style="display:none">THIS SESSION ON CLAUDE.AI</a></div>

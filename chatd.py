@@ -740,7 +740,7 @@ def api_voice():
         return ('', 204)
     if request.method == 'POST':
         d = body()
-        V.set_conf(d.get('engine'), d.get('voice'))
+        V.set_conf(d.get('engine'), d.get('voice'), d.get('model'))
         if who()['engine'] == 'clone':
             V.warm()
         now = who()
@@ -751,7 +751,8 @@ def api_voice():
     w = who()
     st = V.status()
     return jsonify(dict(w, ok=True, available=V.AVAILABLE, why=V.why_not(),
-                        voices=[v['name'] for v in V.voices()], ears=st.get('ears'), clone=st.get('clone')))
+                        voices=[v['name'] for v in V.voices()], models=V.models(),
+                        ears=st.get('ears'), clone=st.get('clone')))
 
 
 def save_recording(raw, mime):

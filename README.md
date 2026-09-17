@@ -1,4 +1,4 @@
-# ClaudeMantraChat
+# CCMC
 
 A local chat interface for Claude Code, built for one person who reads by ear.
 

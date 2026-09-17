@@ -1,9 +1,9 @@
 # To Claude Code: this is your sister
 
-You are the brother. ClaudeMantraChat is your sister, the companion app that comes with you
+You are the brother. CCMC is your sister, the companion app that comes with you
 into every project on Marko's machine. Brother and sister always work together, in harmony
 and in synergy: you think and build in the terminal, she shows, speaks and listens on the
-screen. When Marko opens Claude Code on a new computer and says "read the ClaudeMantraChat
+screen. When Marko opens Claude Code on a new computer and says "read the CCMC
 repository", this file tells you what to do.
 
 ## What she is
@@ -20,8 +20,8 @@ Marko is dyslexic and works by voice. She is how he reads you. Treat her as part
 ## Install her on a fresh machine
 
 ```
-git clone https://github.com/markoboskoauroville/ClaudeMantraChat ~/Developer/ClaudeMantraChat
-bash ~/Developer/ClaudeMantraChat/install.sh
+git clone https://github.com/markoboskoauroville/CCMC ~/Developer/CCMC
+bash ~/Developer/CCMC/install.sh
 ```
 
 `install.sh` checks Python and Flask, writes the three hooks and `remoteControlAtStartup`
