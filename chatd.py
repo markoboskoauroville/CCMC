@@ -945,6 +945,18 @@ def main():
     STATE['port'] = port
     with open(PORTFILE, 'w', encoding='utf-8') as fh:
         fh.write('%d\n' % port)
+    # AND ON THE WALL WHERE EVERYONE LOOKS (MANTRA_PORTS, 17.9.2026). port.txt is hers alone; the
+    # registry is the Mac's, so the star, the voice and any other app can ask where she is instead of
+    # assuming 8825. She already binds upward, so she only has to write down where she landed.
+    try:
+        sys.path.insert(0, os.path.expanduser('~/.local/lib/mantra'))
+        import ports as _ports
+        d = _ports._read(); d['ccmc'] = {'port': port, 'url': 'http://127.0.0.1:%d' % port,
+                                         'health': '/health', 'pid': os.getpid(),
+                                         'at': int(time.time()), 'wanted': BASE}
+        _ports._write(d)
+    except Exception:                                # noqa: BLE001  never a dependency
+        pass
     try:
         import flask.cli
         flask.cli.show_server_banner = lambda *a, **k: None
