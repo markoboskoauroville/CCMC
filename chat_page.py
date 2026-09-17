@@ -447,6 +447,11 @@ function add(m, scroll){
       bl.appendChild(st);
       bl.addEventListener('click', ev => {
         if (ev.target.closest('a')) return;
+        /* THE BLOCK WINS. The card's own body still listens, so a click inside a block used to start
+           TWO readings - the block's and the whole card's - and the second one's endReading() killed
+           the first before a note was heard. MEASURED in his browser: two readPlan calls per click,
+           /api/read/draft/plan then /api/read/373/plan (17.9.2026). */
+        ev.stopPropagation();
         if (current && current.msgEl === bl.querySelector('.blkin')){ current.toggle(); return; }
         readPlan('/api/read/draft/plan', {text: b.text}, bl.querySelector('.blkin'), null, st);
       });
@@ -571,13 +576,23 @@ function rangeOf(map, from, to){
 }
 /* where a sentence sits in the block, matched on letters and digits so spacing and punctuation
    cannot throw it off; the search starts after the previous sentence, so repeats land in order */
-function findIn(map, needle, from){
+function slimOf(map){
+  /* BUILT ONCE PER BLOCK, NOT ONCE PER SENTENCE. findIn walked every character of the block and built
+     two arrays EVERY time it was called - once for each sentence - which is O(n squared) on the block's
+     length and froze the tab on a long one (17.9.2026). The index belongs to the block, so it is kept
+     on the block's map and built the first time anything asks for it. */
+  if (map.slim) return map.slim;
   const keep = c => /[\p{L}\p{N}]/u.test(c);
   const idx = [], slim = [];
   for (let i = 0; i < map.full.length; i++){ const c = map.full[i]; if (keep(c)){ slim.push(c.toLowerCase()); idx.push(i); } }
+  map.slim = {idx, hay: slim.join('')};
+  return map.slim;
+}
+function findIn(map, needle, from){
+  const keep = c => /[\p{L}\p{N}]/u.test(c);
+  const {idx, hay} = slimOf(map);
   const want = [...needle].filter(keep).map(c => c.toLowerCase()).join('');
   if (!want) return null;
-  const hay = slim.join('');
   let lo = 0;
   if (from != null){ while (lo < idx.length && idx[lo] < from) lo++; }
   let at = hay.indexOf(want, lo);
@@ -608,7 +623,11 @@ class Reader {
        interface without additional helping window"). The words are lit in the card itself: its body
        is swapped for the sentences while it is read and put back when the reading ends. A draft is
        read in a box that takes the entry box's place. */
-    this.doc = msgEl.querySelector('.body');
+    /* A CARD passes its .msg and the text is in .body; a BLOCK passes its .blkin, which IS the text.
+       Before this, a block found no .body inside itself, was taken for a draft, and read into the
+       draft box - so a click mapped no sentences, appended no audio, and looked like nothing had
+       happened at all (MEASURED in his browser, 17.9.2026: spansMapped 0, audioAppended 0). */
+    this.doc = msgEl.querySelector('.body') || (msgEl.classList && msgEl.classList.contains('blkin') ? msgEl : null);
     this.draft = !this.doc;
     if (this.draft){ this.doc = draftdoc; rt.style.display = 'none'; draftdoc.style.display = 'block'; }
     /* the block is left exactly as it is; only an audio element is parked in it */

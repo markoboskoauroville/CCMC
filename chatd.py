@@ -45,7 +45,7 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-from flask import Flask, Response, jsonify, request, stream_with_context   # noqa: E402
+from flask import Flask, Response, jsonify, request, send_from_directory, stream_with_context   # noqa: E402
 
 from ring import Ring                          # noqa: E402
 from speechify import synth                    # noqa: E402
@@ -454,6 +454,105 @@ def made_ahead(mid, i, w):
     return sum(1 for n in range(i + 1, plan['count']) if os.path.isfile(sentence_cache(mid, n, w)))
 
 
+# ---------------------------------------------------------------- the one reading service (8837)
+# Marko, 17.9.2026: "There should be a central system for speech generation in this computer. Every app
+# works the same way with the same rules. Fix this on a system level."
+#
+# She had her own copy of everything: her own splitter, her own queue, her own look-ahead, her own cache.
+# MANTRA_VOICE now carries all of it at /read, so she asks instead. Her SENTENCES are still hers - they
+# are sent with the plan - so the page and the service can never disagree about what sentence three is.
+#
+# It is a delegation, not a dependency: every call is wrapped, and anything that fails falls straight
+# back to the pipeline she already had. A voice server that is down must never mean a page that cannot
+# read; that is the whole reason she had her own in the first place.
+CENTRAL = {}           # her plan id -> the service's plan id
+VOICE_CACHE = os.path.expanduser('~/.voice/cache')      # the service's clips, on this same machine
+
+
+def voice_base():
+    try:
+        sys.path.insert(0, os.path.expanduser('~/.local/lib/mantra'))
+        import ports as _p
+        return _p.find('voice')
+    except Exception:                                   # noqa: BLE001
+        return None
+
+
+def _post(base, path, payload, timeout=8):
+    import urllib.request
+    req = urllib.request.Request(base + path, data=json.dumps(payload).encode(),
+                                 headers={'Content-Type': 'application/json'})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read())
+
+
+def central_pid(base, mid, plan):
+    """The service's plan for this reading, made once from HER sentences."""
+    pid = CENTRAL.get(mid)
+    if pid:
+        return pid
+    r = _post(base, '/read/plan', {'sents': plan['sents']})
+    if not r.get('ok'):
+        return None
+    CENTRAL[mid] = r['id']
+    return r['id']
+
+
+def central_sentence(mid, plan, n):
+    """Sentence n through the service, in the shape her page already expects, or None to fall back."""
+    base = voice_base()
+    if not base:
+        return None
+    try:
+        pid = central_pid(base, mid, plan)
+        if not pid:
+            return None
+        c = _post(base, '/read/%s/%d' % (pid, n), {}, timeout=600)
+        if not c.get('ok'):
+            return None
+        return {'ok': True, 'id': mid, 'n': n, 'billed': 0, 'key': c.get('voice') or 'clone',
+                'cached': bool(c.get('cached')), 'made': None,
+                'clip': {'src': c['url'].replace('/audio/', '/voice-audio/', 1), 'prop': False, 'text': c.get('text') or plan['sents'][n],
+                         'words': c.get('words') or [], 'dur': c.get('secs') or 0}}
+    except Exception as e:                              # noqa: BLE001
+        log('central read %s/%s fell back: %s' % (mid, n, str(e)[:120]))
+        return None
+
+
+def central_at(mid, plan, n, ahead=5):
+    base = voice_base()
+    if not base:
+        return False
+    try:
+        pid = central_pid(base, mid, plan)
+        if not pid:
+            return False
+        _post(base, '/read/%s/at/%d' % (pid, n), {'ahead': ahead}, timeout=6)
+        return True
+    except Exception:                                   # noqa: BLE001
+        return False
+
+
+@app.route('/voice-audio/<path:rel>', methods=['GET'])
+def voice_audio(rel):
+    """The service's clip, served from her own origin, as a FILE.
+
+    Two things had to be got right, both paid for on 17.9.2026:
+
+    A cross-origin <audio> src did not load in Chrome - the same URL answered 200 with 24 KB of
+    audio/mpeg to curl and never fired loadedmetadata in the page. So it comes from her origin.
+
+    And it must be a real file response, not bytes in a Response(): a media element asks for RANGES,
+    and a plain 200 with a Content-Length left readyState at 0 for eleven seconds. send_from_directory
+    with conditional=True answers 206 and it plays. The clip is on this machine in the voice's own
+    cache, so nothing is copied or proxied - the file is simply served.
+    """
+    try:
+        return send_from_directory(VOICE_CACHE, rel, mimetype='audio/mpeg', conditional=True)
+    except Exception as e:                              # noqa: BLE001
+        return (str(e)[:120], 404)
+
+
 def store_clip(mid, n, w, text, audio, tokens, prop, billed, label, masked=''):
     clip = {'src': 'data:audio/mpeg;base64,' + base64.b64encode(audio).decode('ascii'),
             'prop': prop, 'text': text, 'words': tokens,
@@ -688,6 +787,9 @@ def read_sentence(mid, n):
     plan = read_plan(mid)
     if plan is None or n < 0 or n >= plan['count']:
         return jsonify({'ok': False, 'error': 'no such sentence'}), 404
+    got = central_sentence(mid, plan, n)          # the one reading service, when it is up
+    if got is not None:
+        return jsonify(got)
     w = who()
     data = cached_sentence(mid, n, w)
     if data is None:
@@ -721,6 +823,8 @@ def read_at(mid, i):
     for k in body().get('heard') or []:
         if isinstance(k, int) and 0 <= k < plan['count']:
             forget(mid, k)
+    if central_at(mid, plan, i):          # the service keeps the queue ahead; hers stays as the fallback
+        return jsonify({'ok': True, 'made': None, 'central': True})
     queue_card(mid, i)
     return jsonify({'ok': True, 'at': i, 'made': made_ahead(mid, i, who()), 'count': plan['count']})
 
