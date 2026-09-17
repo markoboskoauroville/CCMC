@@ -16,9 +16,10 @@ colour only on the word, instant jumps and never a smooth scroll.
 """
 
 CSS = r"""
-:root{--bg:#FAFAFA;--panel:#FFFFFF;--ink:#101010;--dim:#6b6b6b;--line:#dcdcdc;--slate:#c9c9c9;
+:root{--bg:#000000;--panel:#070707;--ink:#D1D1D1;--dim:#878787;--line:#242424;--slate:#3a3a3a;
+--strong:#FDFCFD;--hover:#121212;--code-bg:#0B0B0B;--code-head:#151515;--link:#BDC6F9;--good:#5AF78E;--mine:#0A0F0A;
 --strong:#000;--hover:#F1F1F1;--code-bg:#F4F4F4;--code-head:#EAEAEA;--link:#2744C7;--good:#00821F;--mine:#F2F6EE;
---amber:#B43C2A;--sent:#EDEDED;--sent-fg:#101010;--wordbg:#D93025;--wordfg:#FFFFFF;--gold:38.2vw}
+--amber:#BDC6F9;--sent:#EDEDED;--sent-fg:#101010;--wordbg:#D93025;--wordfg:#FFFFFF;--gold:38.2vw}
 *{box-sizing:border-box}
 /* THE TERMINAL'S OWN LOOK (Marko, 17.9.2026: "your Claude code has beautiful output. It has good
    colors. It has good font. I want to copy that to my Mantra chat, exactly as it is"). MEASURED from
@@ -129,6 +130,11 @@ body.open #side{width:var(--gold);min-width:280px}
 #tpstatus{position:absolute;right:16px;bottom:8px;max-width:70%;text-align:right;pointer-events:none;
   font:10.5px/1.3 Monaco,Menlo,monospace;letter-spacing:.08em;color:var(--dim)}
 #tpstatus.bad{color:#B43C2A}
+/* THE ONLY TWO MARKS WHILE IT READS. ::highlight() paints over a Range: no node, no padding, no
+   shadow, nothing that can move a line. The sentence gets a quiet band, the word the red his rule
+   asks for (17.9.2026). */
+::highlight(mc-sent){background-color:var(--sent);color:var(--sent-fg)}
+::highlight(mc-word){background-color:var(--wordbg);color:var(--wordfg)}
 .sent{padding:1px 2px;border-radius:5px;transition:background .12s,color .12s,opacity .2s;opacity:.5;cursor:pointer}
 .sent.done{opacity:.85}
 .sent.active{background:var(--sent);color:var(--sent-fg);opacity:1;box-shadow:0 0 0 3px var(--sent)}
@@ -283,12 +289,17 @@ document.getElementById('pHide').onclick = () => pane(false);
    painted in the scheme it selects, so the choice is seen and not read. The first is his terminal,
    measured from the iTerm profile "Claude hub". */
 const SCHEMES = {
-  terminal:{name:'TERMINAL',bg:'#FAFAFA',panel:'#FFFFFF',ink:'#101010',dim:'#6b6b6b',line:'#dcdcdc',slate:'#c9c9c9',accent:'#B43C2A',strong:'#000000',hover:'#F1F1F1','code-bg':'#F4F4F4','code-head':'#EAEAEA',link:'#2744C7',good:'#00821F',mine:'#F2F6EE'},
-  paper:   {name:'PAPER',   bg:'#F6F2E9',panel:'#FFFDF7',ink:'#1f1a12',dim:'#7a7365',line:'#e2dccd',slate:'#cdc5b2',accent:'#9a5b14',strong:'#120e08',hover:'#EFE9DB','code-bg':'#F0EADB','code-head':'#E6DFCC',link:'#2a5ea8',good:'#3f6b2a',mine:'#FBF7EC'},
-  night:   {name:'NIGHT',   bg:'#0b0d10',panel:'#10141a',ink:'#e6e9ee',dim:'#8b93a1',line:'#1f2630',slate:'#33404f',accent:'#e2a03f',strong:'#ffffff',hover:'#171c24','code-bg:':'#0a0c10','code-bg':'#0a0c10','code-head':'#161b23',link:'#7aa2f7',good:'#57c97a',mine:'#141a14'},
+  /* SIX DARK SCHEMES, AND NOT ONE LIGHT ONE (Marko, 17.9.2026: "I don't want any light themes.
+     Everything in the theme must be a variation of dark mode"). TERMINAL is his own, MEASURED off a
+     screenshot of this very session: ground #000000, body #D1D1D1, bold #FDFCFD, and the periwinkle
+     #BDC6F9 that Claude Code prints code in. The earlier light set came from reading the wrong iTerm
+     profile - his terminal is black, and the page should never have been white. */
+  terminal:{name:'TERMINAL',bg:'#000000',panel:'#070707',ink:'#D1D1D1',dim:'#878787',line:'#242424',slate:'#3a3a3a',accent:'#BDC6F9',strong:'#FDFCFD',hover:'#121212','code-bg':'#0B0B0B','code-head':'#151515',link:'#BDC6F9',good:'#5AF78E',mine:'#0A0F0A'},
+  carbon:  {name:'CARBON',  bg:'#0b0d10',panel:'#10141a',ink:'#dfe4ea',dim:'#8b93a1',line:'#1f2630',slate:'#33404f',accent:'#e2a03f',strong:'#ffffff',hover:'#171d26','code-bg':'#080a0e','code-head':'#141a23',link:'#7aa2f7',good:'#57c97a',mine:'#0d1410'},
   ink:     {name:'INK',     bg:'#12141c',panel:'#181b25',ink:'#dfe3f0',dim:'#8a90a6',line:'#262b39',slate:'#3a4256',accent:'#c792ea',strong:'#ffffff',hover:'#1f2331','code-bg':'#101320','code-head':'#1c2030',link:'#82aaff',good:'#7fd88f',mine:'#1a2130'},
-  forest:  {name:'FOREST',  bg:'#F2F6EE',panel:'#FFFFFF',ink:'#14200f',dim:'#6a7a60',line:'#d7e3cc',slate:'#b6c7a8',accent:'#2f6f2f',strong:'#0a1407',hover:'#E9F0E2','code-bg':'#EDF3E7','code-head':'#E0EAD7',link:'#2f5fa8',good:'#00821F',mine:'#FBFDF9'},
-  slate:   {name:'SLATE',   bg:'#EEF1F4',panel:'#FFFFFF',ink:'#111820',dim:'#66707c',line:'#d5dce3',slate:'#b6c0ca',accent:'#2744C7',strong:'#05090d',hover:'#E4E9EF','code-bg':'#EAEFF4',' code-head':'#DDE4EB','code-head':'#DDE4EB',link:'#1b5fbe',good:'#0a7d3c',mine:'#F7FAFC'}
+  moss:    {name:'MOSS',    bg:'#0c110c',panel:'#111811',ink:'#d6e2d4',dim:'#84947f',line:'#1d271c',slate:'#334233',accent:'#8fd67a',strong:'#ffffff',hover:'#162016','code-bg':'#090d09','code-head':'#141d14',link:'#9fd0f0',good:'#8fd67a',mine:'#101a10'},
+  ember:   {name:'EMBER',   bg:'#100c0b',panel:'#171110',ink:'#e6dad6',dim:'#9b8880',line:'#271d1a',slate:'#43322d',accent:'#e58a5a',strong:'#ffffff',hover:'#1f1715','code-bg':'#0c0908','code-head':'#1c1513',link:'#d9a66b',good:'#8fc98a',mine:'#191110'},
+  deep:    {name:'DEEP',    bg:'#06090f',panel:'#0b1018',ink:'#cfd9e6',dim:'#7d8a9c',line:'#16202c',slate:'#2a3a4c',accent:'#4fc3f7',strong:'#ffffff',hover:'#101822','code-bg':'#05080d','code-head':'#0f1722',link:'#4fc3f7',good:'#4fd6a0',mine:'#08131a'}
 };
 let SCHEME = 'terminal';
 try { SCHEME = localStorage.getItem('mantra.scheme') || 'terminal'; } catch(e){}
@@ -530,6 +541,60 @@ function hidePill(){ pill.classList.remove('on'); }
    allows six connections, and the event stream is one) and lets go of every clip before i. A STOP
    aborts what is in flight and asks for nothing more. */
 const WORD_LEAD = 0.02, HANDOFF_LEAD = 0.06, AHEAD = 5;   /* 5 kept in front, 1 waited for (17.9.2026) */
+/* HIGHLIGHT IN PLACE, CHANGE NOTHING (Marko, 17.9.2026: "don't change the view when I read ... Work
+   with what is on the screen. Don't change anything and highlight the words spoken and highlight the
+   sentence", and "When I click on a text, I'm getting a new window with different formatting").
+
+   The old reader did `this.doc.innerHTML = ''` and rebuilt the block as plain sentence spans, which is
+   what destroyed the code boxes and the tables and made it look like another window. Nothing is rebuilt
+   now. The CSS Custom Highlight API paints over Ranges without touching the DOM at all: no node is
+   added, moved or removed, so not one pixel of layout changes while it reads. */
+function textMap(root){
+  const nodes = [], walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let full = '', n;
+  while ((n = walk.nextNode())) { nodes.push({node: n, at: full.length}); full += n.nodeValue; }
+  return {nodes, full};
+}
+/* a Range over [from, to) of the mapped text */
+function rangeOf(map, from, to){
+  if (!(to > from)) return null;
+  let a = null, b = null;
+  for (const e of map.nodes){
+    const end = e.at + e.node.nodeValue.length;
+    if (!a && from >= e.at && from < end) a = [e.node, from - e.at];
+    if (to > e.at && to <= end){ b = [e.node, to - e.at]; break; }
+  }
+  if (!a || !b) return null;
+  const r = document.createRange();
+  try { r.setStart(a[0], a[1]); r.setEnd(b[0], b[1]); } catch(e){ return null; }
+  return r;
+}
+/* where a sentence sits in the block, matched on letters and digits so spacing and punctuation
+   cannot throw it off; the search starts after the previous sentence, so repeats land in order */
+function findIn(map, needle, from){
+  const keep = c => /[\p{L}\p{N}]/u.test(c);
+  const idx = [], slim = [];
+  for (let i = 0; i < map.full.length; i++){ const c = map.full[i]; if (keep(c)){ slim.push(c.toLowerCase()); idx.push(i); } }
+  const want = [...needle].filter(keep).map(c => c.toLowerCase()).join('');
+  if (!want) return null;
+  const hay = slim.join('');
+  let lo = 0;
+  if (from != null){ while (lo < idx.length && idx[lo] < from) lo++; }
+  let at = hay.indexOf(want, lo);
+  if (at < 0) at = hay.indexOf(want);
+  if (at < 0) return null;
+  return {from: idx[at], to: idx[Math.min(at + want.length, idx.length) - 1] + 1};
+}
+
+/* one place that paints a Range, and the fallback when the browser has no Highlight API */
+const HL_OK = !!(window.CSS && CSS.highlights && window.Highlight);
+function paintHL(name, range){
+  if (!HL_OK) return;
+  if (!range){ CSS.highlights.delete(name); return; }
+  CSS.highlights.set(name, new Highlight(range));
+}
+function clearHL(){ if (HL_OK){ CSS.highlights.delete('mc-sent'); CSS.highlights.delete('mc-word'); } }
+
 class Reader {
   constructor(plan, msgEl, btn, st){
     this.n = plan.count; this.texts = plan.sents; this.mid = plan.id;
@@ -546,30 +611,27 @@ class Reader {
     this.doc = msgEl.querySelector('.body');
     this.draft = !this.doc;
     if (this.draft){ this.doc = draftdoc; rt.style.display = 'none'; draftdoc.style.display = 'block'; }
-    this.orig = this.doc.innerHTML; this.doc.innerHTML = ''; this.doc.appendChild(this.a);
-    this.doc.style.fontSize = FONT + 'px';
-    this.sents = this.texts.map((t, i) => {
-      const el = document.createElement('span'); el.className = 'sent'; el.textContent = t + ' ';
-      el.onclick = () => this.jumpTo(i); this.doc.appendChild(el); return el;
+    /* the block is left exactly as it is; only an audio element is parked in it */
+    this.a.style.display = 'none'; this.doc.appendChild(this.a);
+    this.map = textMap(this.doc);
+    this.spans = [];                      /* where each sentence sits in the block */
+    let cursor = 0;
+    this.texts.forEach((t, i) => {
+      const hit = findIn(this.map, t, cursor);
+      this.spans[i] = hit;
+      if (hit) cursor = hit.to;
     });
     this.a.addEventListener('loadedmetadata', () => { const c = this.clips[this.ci]; if (c && c.prop && isFinite(this.a.duration)) this.scale = this.a.duration; });
     this.a.addEventListener('ended', () => { if (this.dead) return; if (!this.handed) this.next(); });
     this.a.addEventListener('play', () => { pp.textContent = '❚❚'; if (btn){ btn.textContent = 'READING'; btn.classList.add('on'); } });
     this.a.addEventListener('pause', () => { if (!this.a.ended) pp.textContent = '▶'; });
   }
-  /* fill sentence i with word spans once its clip is here */
+  /* the words of sentence i, as offsets into the block; no span is made, nothing is inserted */
   fill(i){
-    const c = this.clips[i], el = this.sents[i]; el.textContent = '';
-    const text = c.text || '', ws = []; let p = 0;
-    (c.words || []).forEach(w => {
-      const x = w.s|0, y = w.e|0;
-      if (x > p) el.appendChild(document.createTextNode(text.slice(p, x)));
-      const sp = document.createElement('span'); sp.className = 'w'; sp.textContent = text.slice(x, y); el.appendChild(sp);
-      ws.push({el: sp, t: w.t, d: (w.d != null ? w.d : w.t)}); p = y;
-    });
-    if (p < text.length) el.appendChild(document.createTextNode(text.slice(p)));
-    el.appendChild(document.createTextNode(' '));
-    this.rows[i] = {el, words: ws};
+    const c = this.clips[i], base = this.spans[i];
+    const ws = (c.words || []).map(w => ({t: w.t, d: (w.d != null ? w.d : w.t),
+      from: base ? base.from + (w.s|0) : -1, to: base ? base.from + (w.e|0) : -1}));
+    this.rows[i] = {words: ws};
   }
   ensure(i){
     if (this.dead || i < 0 || i >= this.n || this.clips[i] || this.inflight[i]) return;
@@ -631,12 +693,17 @@ class Reader {
   /* THE TELEPROMPTER RULE: the sentence being read sits at the top edge of the box, instantly. */
   /* THE TELEPROMPTER RULE, in the log itself: the sentence being read is brought to the top edge of the
      log, instantly, never smoothly, unless the whole card already stands in view. A draft does not scroll. */
-  toTop(el){
-    if (this.draft) return;
-    const L = list.getBoundingClientRect(), r = el.getBoundingClientRect(), c = this.msgEl.getBoundingClientRect();
-    if (c.top >= L.top && c.bottom <= L.bottom) return;
-    if (Math.abs(r.top - L.top - TOP_PAD) < 2) return;
-    list.scrollTop += r.top - L.top - TOP_PAD;
+  /* IT DOES NOT MOVE THE PAGE (Marko, 17.9.2026: "Work with what is on the screen. Don't change
+     anything"). The old rule dragged every sentence to the top edge of the log - a moving page on every
+     sentence. Now it acts only when the sentence has gone off screen, and brings it just inside. */
+  toTop(r){
+    if (this.draft || !r) return;
+    const L = list.getBoundingClientRect(), b = r.getBoundingClientRect();
+    if (!b.height && !b.width) return;
+    const pad = 24;
+    if (b.top >= L.top + pad && b.bottom <= L.bottom - pad) return;
+    if (b.top < L.top + pad) list.scrollTop -= (L.top + pad - b.top);
+    else list.scrollTop += (b.bottom - (L.bottom - pad));
   }
   follow(){
     this.raf = null; if (this.dead) return;
@@ -644,9 +711,12 @@ class Reader {
     if (row){
       const t = this.clock(this.a.currentTime||0, this.a.playbackRate, !this.a.paused) + WORD_LEAD;
       const key = this.ci * 2 + (this.a.paused ? 1 : 0);
+      /* the sentence: a Range, painted by ::highlight(), nothing inserted */
       if (key !== this.lastSent){ this.lastSent = key;
-        this.doc.querySelectorAll('.sent.active,.sent.paused').forEach(e => { e.classList.remove('active','paused'); e.classList.add('done'); });
-        row.el.classList.add(this.a.paused ? 'paused' : 'active'); this.toTop(row.el);
+        const b = this.spans[this.ci];
+        const r = b && rangeOf(this.map, b.from, b.to);
+        paintHL('mc-sent', r);
+        if (r) this.toTop(r);
       }
       const sp = row.words;
       if (sp.length){
@@ -654,7 +724,10 @@ class Reader {
         while (lo <= hi){ const m = (lo+hi)>>1; if (sp[m].t*this.scale <= t){ k = m; lo = m+1; } else hi = m-1; }
         if (k === sp.length-1 && t > sp[k].d*this.scale + 0.12) k = -1;
         const wk = this.ci*1000 + k;
-        if (wk !== this.lastWord){ this.lastWord = wk; sp.forEach((o, wi) => o.el.classList.toggle('now', wi === k)); }
+        if (wk !== this.lastWord){ this.lastWord = wk;
+          const w = k >= 0 ? sp[k] : null;
+          paintHL('mc-word', w && w.from >= 0 ? rangeOf(this.map, w.from, w.to) : null);
+        }
       }
     }
     const dur = this.a.duration;
@@ -675,7 +748,8 @@ class Reader {
   destroy(){ this.dead = true; this.ctls.forEach(c => { try { c.abort(); } catch(e){} });
     try { this.a.pause(); } catch(e){} this.a.removeAttribute('src'); this.a.remove();
     if (this.raf) cancelAnimationFrame(this.raf); this.raf = null;
-    this.doc.innerHTML = this.orig; this.doc.style.fontSize = '';           /* the card as it was */
+    clearHL();                    /* nothing to put back: nothing was ever taken out */
+    if (this.a && this.a.parentNode) this.a.parentNode.removeChild(this.a);
     if (this.draft){ draftdoc.style.display = 'none'; rt.style.display = ''; }
     if (this.btn){ this.btn.textContent = 'READ'; this.btn.classList.remove('on'); }
     this.msgEl.classList.remove('reading');
@@ -982,7 +1056,7 @@ if (/gear/.test(location.search)) togglePanel(true);          /* a render with t
 """
 
 HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>MANTRA CHAT</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>CCMC</title>
 <!-- THE PAGE OWNS ITS OWN COLOURS. MEASURED 17.9.2026 in his Chrome: the Dark Reader extension was
      injecting darkreader--variables, darkreader--root-vars and darkreader--override, repainting every
      colour the page set. His six schemes were being applied correctly and then overpainted, which is
@@ -990,7 +1064,7 @@ HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
      Reader honours this lock and leaves a page that declares it alone; `color-scheme` tells the
      browser the same, so Chrome's own auto-darkening stays off too. -->
 <meta name="darkreader-lock">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="dark">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PHJlY3Qgd2lkdGg9JzMyJyBoZWlnaHQ9JzMyJyByeD0nNycgZmlsbD0nIzBiMGQxMCcvPjxwYXRoIGQ9J002IDYuNWgyMGEzLjIgMy4yIDAgMCAxIDMuMiAzLjJ2OWEzLjIgMy4yIDAgMCAxLTMuMiAzLjJIMTVsLTYuMiA0LjJ2LTQuMkg2YTMuMiAzLjIgMCAwIDEtMy4yLTMuMnYtOUEzLjIgMy4yIDAgMCAxIDYgNi41eicgZmlsbD0nI2YyZGRiNCcvPjxjaXJjbGUgY3g9JzExLjMnIGN5PScxNC4yJyByPScyLjEnIGZpbGw9JyMwYjBkMTAnLz48Y2lyY2xlIGN4PScxNycgY3k9JzE0LjInIHI9JzIuMScgZmlsbD0nI2UyM2I0ZScvPjxjaXJjbGUgY3g9JzIyLjcnIGN5PScxNC4yJyByPScyLjEnIGZpbGw9JyMwYjBkMTAnLz48L3N2Zz4=">
 <style>%(css)s</style></head><body>
 <aside id="side"><div class="in">
@@ -1004,7 +1078,7 @@ HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 </div></aside>
 <main id="main">
 <div id="hot"></div>
-<div id="top"><button id="tog" title="Side pane">%(icon)s</button><span class="t" id="title">MANTRA CHAT</span><span class="p" id="proj">waiting for a session</span><span id="dot" title="live"></span></div>
+<div id="top"><button id="tog" title="Side pane">%(icon)s</button><span class="t" id="title">CCMC</span><span class="p" id="proj">waiting for a session</span><span id="dot" title="live"></span></div>
 <div id="list"></div>
 <div id="tp"><div id="tpgrip"><span class="dots"></span><span class="who">BEATRICE</span><span class="cnt" id="tpcnt"></span></div><div id="tpbox"><div id="tpdoc"></div></div><div id="tpline"></div><div id="tpcorner"></div>
 <div id="tpstatus"></div></div>
