@@ -147,12 +147,13 @@ body.open #side{width:var(--gold);min-width:280px}
    is moved into the foot of the card being read, and shown only there. */
 /* No frame (Marko, 8.9.2026: "just put buttons directly in the interface without this frame, and
    maximize the buttons so I can see them"): bare buttons in the card's foot, large. */
-#pill{background:var(--panel);display:none;align-items:center;gap:6px;background:transparent;border:0;padding:0;user-select:none;flex-wrap:wrap}
+#pill{display:none;align-items:center;gap:6px;background:transparent;border:0;padding:0;user-select:none;
+  flex-wrap:wrap;position:static;margin:6px 0 10px;max-width:100%}
 #pill.on{display:inline-flex}
-#pill button{background:var(--slate);color:var(--ink);border:0;border-radius:10px;width:44px;height:38px;
-  font:700 17px/1 Monaco,Menlo,monospace;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#pill button{flex:none;background:var(--slate);color:var(--ink);border:0;border-radius:8px;width:34px;height:28px;
+  font:700 13px/1 Monaco,Menlo,monospace;cursor:pointer;display:flex;align-items:center;justify-content:center}
 #pill button:hover{background:var(--hover)}
-#pill #pp{background:var(--amber);color:#FAFAFA;width:56px}
+#pill #pp{background:var(--amber);color:var(--panel);width:42px}
 #pill #px{color:#B43C2A}
 #pill .v{font:700 14px/1 Monaco,Menlo,monospace;color:var(--amber);min-width:44px;text-align:center}
 #pill .grip{display:none}
@@ -532,7 +533,24 @@ draggable(tp, document.getElementById('tpgrip'), 'mantra.tp', {size: true});
 document.getElementById('pb').onclick = () => { if (current) current.skip(-1); };
 document.getElementById('pn').onclick = () => { if (current) current.skip(1); };
 /* the controls go into the foot of the card being read, right after its READ button */
-function showPill(btn){ if (btn) btn.insertAdjacentElement('afterend', pill); pill.classList.add('on'); pspd.textContent = fmtSpeed(); pfont.textContent = FONT; }
+/* THE CONTROLS SIT UNDER THE TEXT THEY ARE READING (Marko, 17.9.2026: "This controller, which opens
+   up when this is a reading, is blocking my whole interface ... fix they appear under the text box
+   itself, not on the side frame"). showPill was given a BUTTON to sit after; a block has no button any
+   more, so nothing moved it and it stayed wherever it last was - floating over the window. Now it is
+   put after the block, inside the card, where the reading is. And it is a setting: CONTROLS off and it
+   never appears at all. */
+let CONTROLS = true;
+try { CONTROLS = localStorage.getItem('mantra.controls') !== '0'; } catch(e){}
+function showPill(where){
+  if (!CONTROLS) return;
+  if (where && where.insertAdjacentElement) where.insertAdjacentElement('afterend', pill);
+  pill.classList.add('on'); pspd.textContent = fmtSpeed(); pfont.textContent = FONT;
+}
+function paintControls(){
+  const b = document.getElementById('ctrls');
+  if (b){ b.className = 'b ghost' + (CONTROLS ? ' on' : ''); b.textContent = CONTROLS ? 'READING CONTROLS SHOWN' : 'READING CONTROLS HIDDEN'; }
+  if (!CONTROLS) hidePill();
+}
 function hidePill(){ pill.classList.remove('on'); }
 
 /* ---------------------------------------------------------- the reader */
@@ -813,7 +831,7 @@ function readPlan(url, payload, el, btn, st, startKey, startAt){
   if (current && current.msgEl === el && !startKey && startAt == null){ current.toggle(); return; }
   endReading();
   st.textContent = ''; st.className = st.id === 'rs' ? '' : 'st'; noteEl = st;
-  openTP(el); showPill(btn);
+  openTP(el); showPill(btn || (el.closest && el.closest('.blk')) || el);
   tpNote('asking ' + vlabel() + '…'); if (btn){ btn.textContent = 'WAITING'; btn.classList.add('on'); }
   { const blk = el.closest ? el.closest('.blk') : null; if (blk) blk.classList.add('reading'); }
   pending = new AbortController();
@@ -901,7 +919,7 @@ function paintVoice(){
    AUTO VOICE, CLONE MY VOICE, claude.ai beside, the top bar. At the lower right corner of the entry
    band, where the hand already is. */
 const gear = document.getElementById('gear'), panel = document.getElementById('settings');
-function togglePanel(on){ const want = on == null ? !panel.classList.contains('on') : on; panel.classList.toggle('on', want); gear.classList.toggle('on', want); if (want){ paintVoice(); paintEngines(); paintSchemes(); } }
+function togglePanel(on){ const want = on == null ? !panel.classList.contains('on') : on; panel.classList.toggle('on', want); gear.classList.toggle('on', want); if (want){ paintVoice(); paintEngines(); paintSchemes(); paintControls(); } }
 gear.onclick = () => togglePanel();
 document.addEventListener('pointerdown', e => { if (panel.classList.contains('on') && !panel.contains(e.target) && !gear.contains(e.target)) togglePanel(false); });
 
@@ -938,6 +956,13 @@ function setVoice(name){
         else readPlan('/api/read/' + was.mid + '/plan', {}, was.el, was.btn, was.el.querySelector('.st'), null, was.i); } })
     .catch(() => { vst.textContent = 'Server not reachable.'; });
 }
+document.getElementById('ctrls').onclick = () => {
+  CONTROLS = !CONTROLS;
+  try { localStorage.setItem('mantra.controls', CONTROLS ? '1' : '0'); } catch(e){}
+  paintControls();
+  if (CONTROLS && current && current.msgEl && current.msgEl.closest) showPill(current.msgEl.closest('.blk'));
+};
+paintControls();
 autoBtn.onclick = () => { AUTO = !AUTO; try { localStorage.setItem('mantra.auto', AUTO ? '1' : '0'); } catch(e){} paintVoice(); };
 applyScheme(SCHEME);
 loadVoice();
@@ -1108,7 +1133,8 @@ HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <!-- GENERAL FIRST, THEN TWO, THEN SIX (Marko, 17.9.2026: "general settings should be at the top ...
      then under that I have two ... After two, we have six options"). Nothing here explains which
      engine is which: he knows, and being told again is noise. -->
-<h3>GENERAL</h3><div class="btns"><button class="b ghost" id="auto">AUTO VOICE</button></div>
+<h3>GENERAL</h3><div class="btns"><button class="b ghost" id="auto">AUTO VOICE</button>
+<button class="b ghost" id="ctrls">READING CONTROLS</button></div>
 <h3>ENGINE</h3><div class="btns" id="engines"></div>
 <h3>COLOURS</h3><div class="btns" id="schemes"></div>
 <h3>VOICE</h3><div id="voices"></div>
