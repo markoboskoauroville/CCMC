@@ -16,22 +16,26 @@ colour only on the word, instant jumps and never a smooth scroll.
 """
 
 CSS = r"""
-:root{--bg:#0b0d10;--panel:#10141a;--ink:#f2ddb4;--dim:#8b8578;--line:#1f2630;--slate:#23303d;
---amber:#f59e0b;--sent:#ffd93b;--sent-fg:#10120a;--wordbg:#e23b4e;--wordfg:#fff;--gold:38.2vw}
+:root{--bg:#FAFAFA;--panel:#FFFFFF;--ink:#101010;--dim:#6b6b6b;--line:#dcdcdc;--slate:#c9c9c9;
+--amber:#B43C2A;--sent:#EDEDED;--sent-fg:#101010;--wordbg:#D93025;--wordfg:#FFFFFF;--gold:38.2vw}
 *{box-sizing:border-box}
+/* THE TERMINAL'S OWN LOOK (Marko, 17.9.2026: "your Claude code has beautiful output. It has good
+   colors. It has good font. I want to copy that to my Mantra chat, exactly as it is"). MEASURED from
+   his iTerm profile "Claude hub": background #FAFAFA, foreground #101010, font Monaco 14, and the ANSI
+   set below. It is a LIGHT terminal, not a dark one - which is why she was wrong before. */
 html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);
-  font:17px/1.55 -apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  font:14px/1.55 Monaco,Menlo,ui-monospace,monospace;-webkit-font-smoothing:antialiased}
 body{display:flex;overflow:hidden}
 #side{width:0;flex:0 0 auto;overflow:hidden;background:var(--panel);border-right:1px solid var(--line);transition:width .18s ease}
 body.open #side{width:var(--gold);min-width:280px}
 #side .in{width:var(--gold);min-width:280px;padding:18px 18px 30px;height:100%;overflow:auto}
-#side h2{font:700 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin:0 0 12px}
+#side h2{font:700 11px/1 Monaco,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin:0 0 12px}
 #side p{margin:0 0 12px;color:var(--dim);font-size:14px}
 #side .btns{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
-.b{background:var(--amber);color:#0b0d10;border:0;border-radius:999px;font:700 12px/1 ui-monospace,Menlo,monospace;
+.b{background:var(--amber);color:#FAFAFA;border:0;border-radius:999px;font:700 12px/1 Monaco,Menlo,monospace;
   letter-spacing:.1em;padding:11px 16px;cursor:pointer;text-decoration:none;display:inline-block}
 .b.ghost{background:transparent;color:var(--ink);border:1px solid var(--slate)}
-#sessions{font:12px/1.6 ui-monospace,Menlo,monospace;color:var(--dim);white-space:pre-wrap}
+#sessions{font:12px/1.6 Monaco,Menlo,monospace;color:var(--dim);white-space:pre-wrap}
 #main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
 /* the top bar hides; it slides down when the mouse touches the top edge, or stays when pinned */
 #hot{position:absolute;top:0;left:0;right:0;height:10px;z-index:14}
@@ -42,75 +46,75 @@ body.open #side{width:var(--gold);min-width:280px}
 #tog{background:transparent;border:0;padding:6px;cursor:pointer;color:var(--ink);border-radius:8px;display:flex}
 #tog:hover{background:var(--slate)}
 #tog svg{width:24px;height:24px;display:block}
-#top .t{font:700 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.16em;color:var(--amber)}
-#top .p{font:12px/1.3 ui-monospace,Menlo,monospace;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#dot{width:9px;height:9px;border-radius:50%;background:#e23b4e}
-#dot.on{background:#3ddc84}
+#top .t{font:700 12px/1 Monaco,Menlo,monospace;letter-spacing:.16em;color:var(--amber)}
+#top .p{font:12px/1.3 Monaco,Menlo,monospace;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dot{width:9px;height:9px;border-radius:50%;background:#B43C2A}
+#dot.on{background:#00821F}
 #list{flex:1;overflow:auto;padding:22px 16px 24px}
-.msg{max-width:860px;margin:0 auto 18px;padding:14px 18px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
-.msg.marko{background:#151a14;border-color:#26301f}
-.msg.system{background:transparent;border:0;text-align:center;padding:4px;font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--dim)}
-.msg .who{font:700 10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin-bottom:8px;display:flex;gap:10px;align-items:baseline}
-.msg.marko .who{color:#9ccf7a}
+.msg{max-width:900px;margin:0 auto 18px;padding:14px 18px;border-radius:10px;background:var(--panel);border:1px solid var(--line)}
+.msg.marko{background:#F2F6EE;border-color:#d7e3cc}
+.msg.system{background:transparent;border:0;text-align:center;padding:4px;font:12px/1.4 Monaco,Menlo,monospace;color:var(--dim)}
+.msg .who{font:700 10.5px/1 Monaco,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin-bottom:8px;display:flex;gap:10px;align-items:baseline}
+.msg.marko .who{color:#00821f}
 .msg .who .tm{font-weight:400;color:var(--dim);letter-spacing:0}
-.msg .body{word-wrap:break-word;font-size:18px;line-height:1.6}
+.msg .body{word-wrap:break-word;font:15px/1.6 Monaco,Menlo,ui-monospace,monospace}
 /* EVERY BLOCK IS ITS OWN BOX, WITH ITS OWN READ (Marko, 17.9.2026: "I want to have code boxes ...
    multiple code boxes for each of your steps ... Code box I have read ... the same aesthetics as here").
    The card is no longer one wall of text: a heading, a paragraph, a list, a table and a code block are
    each a box he can read on its own. */
 .msg .body .blk{border:1px solid transparent;border-radius:10px;margin:0 0 6px;padding:6px 8px;position:relative}
-.msg .body .blk:hover{border-color:var(--line);background:rgba(255,255,255,.015)}
+.msg .body .blk:hover{border-color:var(--line);background:#F2F2F2}
 .msg .body .blk .blkfoot{display:none;gap:8px;align-items:center;margin-top:6px}
 .msg .body .blk:hover .blkfoot,.msg .body .blk.reading .blkfoot{display:flex}
 .msg .body .blk.reading{border-color:var(--amber)}
 .msg .body .blkin{white-space:normal}
 .msg .body p{margin:0 0 2px;white-space:pre-wrap}
 .msg .body .h1,.msg .body .h2,.msg .body .h3,.msg .body .h4,.msg .body .h5,.msg .body .h6{
-  color:#fff;font-weight:700;letter-spacing:.01em;margin:2px 0}
+  color:#101010;font-weight:700;letter-spacing:.01em;margin:2px 0}
 .msg .body .h1{font-size:23px}
 .msg .body .h2{font-size:20px}
-.msg .body .h3,.msg .body .h4,.msg .body .h5,.msg .body .h6{font-size:18px;color:var(--amber)}
+.msg .body .h3,.msg .body .h4,.msg .body .h5,.msg .body .h6{font-size:16px;color:#B43C2A}
 .msg .body ul,.msg .body ol{margin:2px 0 2px 2px;padding-left:22px}
 .msg .body li{margin:2px 0}
 .msg .body blockquote{margin:2px 0;padding-left:12px;border-left:3px solid var(--slate);color:var(--dim)}
 .msg .body hr{border:0;border-top:1px solid var(--line);margin:8px 0}
-.msg .body a{color:#9ccf7a}
+.msg .body a{color:#2744C7}
 /* a code box, with its language on a bar, like a terminal block */
-.msg .body .cb{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#080a0d;margin:2px 0}
-.msg .body .cbh{font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--dim);padding:7px 12px;background:#0d1117;border-bottom:1px solid var(--line)}
+.msg .body .cb{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#F4F4F4;margin:4px 0}
+.msg .body .cbh{font:600 10px/1 Monaco,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--dim);padding:7px 12px;background:#EAEAEA;border-bottom:1px solid var(--line)}
 .msg .body pre{margin:0;background:transparent;border:0;border-radius:0;padding:11px 13px;overflow:auto;
-  font:13.5px/1.55 ui-monospace,Menlo,monospace;color:#d8e2ec;white-space:pre}
-.msg .body code{background:#0b0d10;border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:15px;font-family:ui-monospace,Menlo,monospace}
+  font:13.5px/1.55 Monaco,Menlo,monospace;color:#101010;white-space:pre}
+.msg .body code{background:#EFEFEF;border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:14px;font-family:Monaco,Menlo,monospace;color:#B43C2A}
 .msg .body .cb code{border:0;padding:0;background:transparent}
 /* a real table */
 .msg .body .tw{overflow-x:auto;margin:2px 0}
 .msg .body table{border-collapse:collapse;font-size:15px;min-width:min(100%,420px)}
 .msg .body th,.msg .body td{border:1px solid var(--line);padding:6px 11px;text-align:left;vertical-align:top}
-.msg .body th{background:#0d1117;color:var(--amber);font:600 11px/1.3 ui-monospace,Menlo,monospace;
+.msg .body th{background:#EAEAEA;color:#101010;font:600 11px/1.3 Monaco,Menlo,monospace;
   letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
 .rd.sm{font-size:9.5px;padding:5px 10px}
 .rd.sm.ghost{background:transparent;color:var(--dim);border:1px solid var(--slate)}
-.msg .body b{color:#fff}
+.msg .body b{color:#101010;font-weight:700}
 .msg .foot{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 .msg.reading{border-color:var(--amber)}
-.rd{background:var(--amber);color:#0b0d10;border:0;border-radius:999px;font:700 11px/1 ui-monospace,Menlo,monospace;
+.rd{background:#101010;color:#FAFAFA;border:0;border-radius:6px;font:700 11px/1 Monaco,Menlo,monospace;
   letter-spacing:.12em;padding:9px 14px;cursor:pointer}
-.rd.on{background:var(--slate);color:var(--ink)}
-.st{font:11px/1.4 ui-monospace,Menlo,monospace;color:var(--dim)}
-.st.bad{color:#e23b4e}
+.rd.on{background:#B43C2A;color:#fff}
+.st{font:11px/1.4 Monaco,Menlo,monospace;color:var(--dim)}
+.st.bad{color:#B43C2A}
 /* the teleprompter: the Beatrice window. Floating, dragged by its grip, resized from its corner,
    its scrollbar hidden; the sentence being read is pushed to the top edge inside it. */
-#tp{position:fixed;left:50%;top:18px;transform:translateX(-50%);width:min(92vw,900px);height:46vh;display:none;
-  min-width:320px;min-height:160px;resize:both;background:#07090c;border:1px solid var(--slate);border-radius:16px;
+#tp{background:#FFFFFF;position:fixed;left:50%;top:18px;transform:translateX(-50%);width:min(92vw,900px);height:46vh;display:none;
+  min-width:320px;min-height:160px;resize:both;background:#FFFFFF;border:1px solid var(--slate);border-radius:12px;
   box-shadow:0 20px 60px rgba(0,0,0,.6);z-index:20;overflow:hidden}
 #tp.on{display:block}
 #tp.drag{cursor:grabbing}
 #tpgrip{position:absolute;left:0;right:0;top:0;height:26px;display:flex;align-items:center;gap:10px;padding:0 14px;
-  cursor:grab;user-select:none;touch-action:none;z-index:2;background:linear-gradient(#0b0d10,rgba(11,13,16,0))}
+  cursor:grab;user-select:none;touch-action:none;z-index:2;background:linear-gradient(#FAFAFA,rgba(250,250,250,0))}
 #tpgrip .dots{width:22px;height:8px;border-top:2px dotted var(--dim);border-bottom:2px dotted var(--dim)}
-#tpgrip .who{font:700 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.16em;color:var(--amber)}
-#tpgrip .cnt{font:10px/1 ui-monospace,Menlo,monospace;color:var(--dim);margin-left:auto}
+#tpgrip .who{font:700 10px/1 Monaco,Menlo,monospace;letter-spacing:.16em;color:var(--amber)}
+#tpgrip .cnt{font:10px/1 Monaco,Menlo,monospace;color:var(--dim);margin-left:auto}
 #tpbox{position:absolute;inset:0;top:26px;overflow:auto;padding:12px 26px 80vh;scroll-behavior:auto;scrollbar-width:none}
 #tpbox::-webkit-scrollbar{display:none}
 #tpline{position:absolute;left:0;right:0;top:38px;height:0;border-top:1px dashed rgba(245,158,11,.35);pointer-events:none}
@@ -118,8 +122,8 @@ body.open #side{width:var(--gold);min-width:280px}
 #tpcorner{position:absolute;right:4px;bottom:4px;width:14px;height:14px;border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);
   border-radius:0 0 4px 0;opacity:.7;pointer-events:none}
 #tpstatus{position:absolute;right:16px;bottom:8px;max-width:70%;text-align:right;pointer-events:none;
-  font:10.5px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:var(--dim)}
-#tpstatus.bad{color:#b8865a}
+  font:10.5px/1.3 Monaco,Menlo,monospace;letter-spacing:.08em;color:var(--dim)}
+#tpstatus.bad{color:#B43C2A}
 .sent{padding:1px 2px;border-radius:5px;transition:background .12s,color .12s,opacity .2s;opacity:.5;cursor:pointer}
 .sent.done{opacity:.85}
 .sent.active{background:var(--sent);color:var(--sent-fg);opacity:1;box-shadow:0 0 0 3px var(--sent)}
@@ -132,14 +136,14 @@ body.open #side{width:var(--gold);min-width:280px}
    is moved into the foot of the card being read, and shown only there. */
 /* No frame (Marko, 8.9.2026: "just put buttons directly in the interface without this frame, and
    maximize the buttons so I can see them"): bare buttons in the card's foot, large. */
-#pill{display:none;align-items:center;gap:6px;background:transparent;border:0;padding:0;user-select:none;flex-wrap:wrap}
+#pill{background:#FFFFFF;display:none;align-items:center;gap:6px;background:transparent;border:0;padding:0;user-select:none;flex-wrap:wrap}
 #pill.on{display:inline-flex}
 #pill button{background:var(--slate);color:var(--ink);border:0;border-radius:10px;width:44px;height:38px;
-  font:700 17px/1 ui-monospace,Menlo,monospace;cursor:pointer;display:flex;align-items:center;justify-content:center}
-#pill button:hover{background:#2e3d4e}
-#pill #pp{background:var(--amber);color:#0b0d10;width:56px}
-#pill #px{color:#e23b4e}
-#pill .v{font:700 14px/1 ui-monospace,Menlo,monospace;color:var(--amber);min-width:44px;text-align:center}
+  font:700 17px/1 Monaco,Menlo,monospace;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#pill button:hover{background:#E4E4E4}
+#pill #pp{background:var(--amber);color:#FAFAFA;width:56px}
+#pill #px{color:#B43C2A}
+#pill .v{font:700 14px/1 Monaco,Menlo,monospace;color:var(--amber);min-width:44px;text-align:center}
 #pill .grip{display:none}
 /* THE COMPOSER IS A BAND WHOSE HEIGHT HE SETS. His request, 3.9.2026: "make possible to change
    size of the chat box so there is a chat like a log and there is entry box. I want to be able
@@ -151,37 +155,37 @@ body.open #side{width:var(--gold);min-width:280px}
 #grip i{display:block;width:56px;height:4px;border-radius:2px;background:var(--slate)}
 #grip:hover i,#grip.drag i{background:var(--amber)}
 #composer .in{max-width:860px;margin:0 auto;width:100%;flex:1;min-height:0;display:flex;flex-direction:column}
-#rt{width:100%;flex:1;min-height:40px;background:#141a21;color:var(--ink);border:1px solid var(--slate);border-radius:12px;
+#rt{width:100%;flex:1;min-height:40px;background:#FFFFFF;color:var(--ink);border:1px solid var(--slate);border-radius:12px;
   padding:12px 14px;font:17px/1.5 inherit;resize:none;outline:none}
 #rt:focus{border-color:var(--amber)}
 #composer .row{display:flex;align-items:center;gap:12px;margin-top:8px;padding-right:48px}
 #composer.reading{box-shadow:inset 0 1px 0 var(--amber)}
-#send{background:var(--amber);color:#0b0d10;border:0;border-radius:999px;font:700 12px/1 ui-monospace,Menlo,monospace;
+#send{background:var(--amber);color:#FAFAFA;border:0;border-radius:999px;font:700 12px/1 Monaco,Menlo,monospace;
   letter-spacing:.1em;padding:12px 18px;cursor:pointer}
 #send:disabled{opacity:.5;cursor:default}
-#rs{font:11px/1.4 ui-monospace,Menlo,monospace;color:var(--dim)}
+#rs{font:11px/1.4 Monaco,Menlo,monospace;color:var(--dim)}
 #rs.ok{color:var(--amber)}
-#rs.bad{color:#e23b4e}
+#rs.bad{color:#B43C2A}
 #empty{text-align:center;color:var(--dim);padding:60px 20px;font-size:15px}
 /* TALK: the microphone button beside SEND, green when it waits, red and pulsing while it listens,
    amber while Whisper writes; a small level bar so he sees he is heard; CANCEL while listening. */
-#talk{background:#3fb862;color:#0b0d10;border:0;border-radius:999px;font:700 12px/1 ui-monospace,Menlo,monospace;
+#talk{background:#00821F;color:#FAFAFA;border:0;border-radius:999px;font:700 12px/1 Monaco,Menlo,monospace;
   letter-spacing:.1em;padding:12px 18px;cursor:pointer;transition:background .2s;min-width:96px}
-#talk.listening{background:#e23b4e;color:#fff;animation:pulse 1.2s infinite}
-#talk.thinking{background:#8a6a2a;color:#fff}
-#cancel{background:#3a2323;color:#e08a8a;border:0;border-radius:999px;font:700 11px/1 ui-monospace,Menlo,monospace;
+#talk.listening{background:#B43C2A;color:#fff;animation:pulse 1.2s infinite}
+#talk.thinking{background:#C7C400;color:#101010}
+#cancel{background:#F6E9E7;color:#B43C2A;border:0;border-radius:999px;font:700 11px/1 Monaco,Menlo,monospace;
   letter-spacing:.1em;padding:12px 14px;cursor:pointer}
-#cancel:hover{background:#5a2a2a;color:#fff}
-#vu{width:64px;height:10px;border-radius:5px;background:#1c222b;border:1px solid var(--line);overflow:hidden;position:relative;flex:none}
+#cancel:hover{background:#B43C2A;color:#fff}
+#vu{width:64px;height:10px;border-radius:5px;background:#E4E4E4;border:1px solid var(--line);overflow:hidden;position:relative;flex:none}
 #vu i{position:absolute;left:0;top:0;bottom:0;width:0;transition:width .08s linear;
-  background:linear-gradient(90deg,#3fb862 0,#3fb862 60%,#e0c040 80%,#d04a3a 100%)}
+  background:linear-gradient(90deg,#00821F 0,#00821F 60%,#C7C400 80%,#B43C2A 100%)}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(226,59,78,.5)}70%{box-shadow:0 0 0 10px rgba(226,59,78,0)}100%{box-shadow:0 0 0 0 rgba(226,59,78,0)}}
 /* EVERY OPTION LIVES UNDER THE GEAR (Marko, 10.9.2026: "voice, auto voice, clone my voice ... all
    options ... only live under the gear icon"): nothing in the top bar, nothing in the side pane. */
-#auto.on{color:#3fb862;border-color:#3fb862}
+#auto.on{color:#00821F;border-color:#00821F}
 #voices{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
-#voices .b.on{background:var(--amber);color:#0b0d10;border-color:var(--amber)}
-#vst{font:12px/1.5 ui-monospace,Menlo,monospace;color:var(--dim);min-height:18px}
+#voices .b.on{background:var(--amber);color:#FAFAFA;border-color:var(--amber)}
+#vst{font:12px/1.5 Monaco,Menlo,monospace;color:var(--dim);min-height:18px}
 /* THE GEAR (Marko, 10.9.2026: "settings in the chat input part on the lower right corner as a gear
    icon"). It sits in the corner of the entry band; its panel opens upward from there and holds what
    the top bar and the side pane hold: the voice, AUTO VOICE, CLONE MY VOICE, claude.ai beside, PIN. */
@@ -190,18 +194,18 @@ body.open #side{width:var(--gold);min-width:280px}
 #gear svg{width:20px;height:20px}
 #gear:hover,#gear.on{color:var(--amber);border-color:var(--amber)}
 #settings{display:none;position:absolute;right:16px;bottom:60px;width:min(92vw,440px);max-height:calc(100vh - 80px);overflow:auto;
-  background:#0e1218;border:1px solid var(--slate);border-radius:14px;padding:16px 16px 12px;z-index:30;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  background:#FFFFFF;border:1px solid var(--slate);border-radius:12px;padding:16px 16px 12px;z-index:30;box-shadow:0 14px 40px rgba(0,0,0,.14)}
 #settings.on{display:block}
-#settings h3{font:700 10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin:12px 0 8px}
+#settings h3{font:700 10.5px/1 Monaco,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin:12px 0 8px}
 #settings h3:first-child{margin-top:0}
 #settings .btns{display:flex;flex-wrap:wrap;gap:8px}
 #settings .b{padding:9px 13px;font-size:11px}
-#settings .b.on{background:var(--amber);color:#0b0d10;border-color:var(--amber)}
+#settings .b.on{background:var(--amber);color:#FAFAFA;border-color:var(--amber)}
 #settings .b{margin:0}
-#settings p{margin:6px 0 0;color:var(--dim);font-size:12px;font-family:ui-monospace,Menlo,monospace}
+#settings p{margin:6px 0 0;color:var(--dim);font-size:12px;font-family:Monaco,Menlo,monospace}
 /* reading in place: the card's body carries the sentences; a draft is read in a box where the entry box was */
 .msg .body .sent{cursor:pointer;line-height:1.6}
-#draftdoc{display:none;flex:1;min-height:40px;overflow:auto;background:#141a21;border:1px solid var(--amber);border-radius:12px;
+#draftdoc{display:none;flex:1;min-height:40px;overflow:auto;background:#FFFFFF;border:1px solid var(--amber);border-radius:12px;
   padding:12px 14px;white-space:pre-wrap;line-height:1.6}
 """
 
