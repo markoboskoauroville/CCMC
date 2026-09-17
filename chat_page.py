@@ -53,9 +53,44 @@ body.open #side{width:var(--gold);min-width:280px}
 .msg .who{font:700 10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin-bottom:8px;display:flex;gap:10px;align-items:baseline}
 .msg.marko .who{color:#9ccf7a}
 .msg .who .tm{font-weight:400;color:var(--dim);letter-spacing:0}
-.msg .body{white-space:pre-wrap;word-wrap:break-word;font-size:18px;line-height:1.6}
-.msg .body pre{background:#0b0d10;border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow:auto;font-size:13px}
-.msg .body code{background:#0b0d10;border-radius:4px;padding:0 4px;font-size:15px}
+.msg .body{word-wrap:break-word;font-size:18px;line-height:1.6}
+/* EVERY BLOCK IS ITS OWN BOX, WITH ITS OWN READ (Marko, 17.9.2026: "I want to have code boxes ...
+   multiple code boxes for each of your steps ... Code box I have read ... the same aesthetics as here").
+   The card is no longer one wall of text: a heading, a paragraph, a list, a table and a code block are
+   each a box he can read on its own. */
+.msg .body .blk{border:1px solid transparent;border-radius:10px;margin:0 0 6px;padding:6px 8px;position:relative}
+.msg .body .blk:hover{border-color:var(--line);background:rgba(255,255,255,.015)}
+.msg .body .blk .blkfoot{display:none;gap:8px;align-items:center;margin-top:6px}
+.msg .body .blk:hover .blkfoot,.msg .body .blk.reading .blkfoot{display:flex}
+.msg .body .blk.reading{border-color:var(--amber)}
+.msg .body .blkin{white-space:normal}
+.msg .body p{margin:0 0 2px;white-space:pre-wrap}
+.msg .body .h1,.msg .body .h2,.msg .body .h3,.msg .body .h4,.msg .body .h5,.msg .body .h6{
+  color:#fff;font-weight:700;letter-spacing:.01em;margin:2px 0}
+.msg .body .h1{font-size:23px}
+.msg .body .h2{font-size:20px}
+.msg .body .h3,.msg .body .h4,.msg .body .h5,.msg .body .h6{font-size:18px;color:var(--amber)}
+.msg .body ul,.msg .body ol{margin:2px 0 2px 2px;padding-left:22px}
+.msg .body li{margin:2px 0}
+.msg .body blockquote{margin:2px 0;padding-left:12px;border-left:3px solid var(--slate);color:var(--dim)}
+.msg .body hr{border:0;border-top:1px solid var(--line);margin:8px 0}
+.msg .body a{color:#9ccf7a}
+/* a code box, with its language on a bar, like a terminal block */
+.msg .body .cb{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#080a0d;margin:2px 0}
+.msg .body .cbh{font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--dim);padding:7px 12px;background:#0d1117;border-bottom:1px solid var(--line)}
+.msg .body pre{margin:0;background:transparent;border:0;border-radius:0;padding:11px 13px;overflow:auto;
+  font:13.5px/1.55 ui-monospace,Menlo,monospace;color:#d8e2ec;white-space:pre}
+.msg .body code{background:#0b0d10;border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:15px;font-family:ui-monospace,Menlo,monospace}
+.msg .body .cb code{border:0;padding:0;background:transparent}
+/* a real table */
+.msg .body .tw{overflow-x:auto;margin:2px 0}
+.msg .body table{border-collapse:collapse;font-size:15px;min-width:min(100%,420px)}
+.msg .body th,.msg .body td{border:1px solid var(--line);padding:6px 11px;text-align:left;vertical-align:top}
+.msg .body th{background:#0d1117;color:var(--amber);font:600 11px/1.3 ui-monospace,Menlo,monospace;
+  letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.rd.sm{font-size:9.5px;padding:5px 10px}
+.rd.sm.ghost{background:transparent;color:var(--dim);border:1px solid var(--slate)}
 .msg .body b{color:#fff}
 .msg .foot{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 .msg.reading{border-color:var(--amber)}
@@ -236,20 +271,82 @@ document.getElementById('pHide').onclick = () => pane(false);
 
 /* ---------------------------------------------------------- rendering */
 function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function md(s){
-  const parts = s.split(/```/);
-  let out = '';
-  parts.forEach((p, i) => {
-    if (i % 2){ out += '<pre>' + esc(p.replace(/^[a-z]*\n/, '')) + '</pre>'; return; }
-    let t = esc(p);
-    t = t.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-    t = t.replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>');
-    t = t.replace(/^#{1,6}\s*(.+)$/gm, '<b>$1</b>');
-    t = t.replace(/^\s*[-*]\s+/gm, '• ');
-    out += t;
-  });
+/* MARKDOWN AS BLOCKS. What Claude Code prints in the terminal is markdown: headings, fenced code,
+   tables, lists. The old md() was four regexes and a <pre>, which is what Marko called nonsense on
+   17.9.2026. This reads the text into BLOCKS, so each can be drawn properly and read on its own. */
+function inline(t){
+  let s = esc(t);
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  s = s.replace(/(^|[^*\w])\*([^*\n]+)\*/g, '$1<i>$2</i>');
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return s;
+}
+function plain(t){ return String(t).replace(/[`*_#|]/g, '').replace(/\s+/g, ' ').trim(); }
+function mdBlocks(src){
+  const L = String(src == null ? '' : src).replace(/\r/g, '').split('\n');
+  const out = []; let i = 0;
+  const isList = s => /^\s*([-*+]|\d+[.)])\s+/.test(s);
+  const isHead = s => /^#{1,6}\s+/.test(s);
+  const isFence = s => /^\s*```/.test(s);
+  const isTable = s => /^\s*\|/.test(s);
+  while (i < L.length){
+    const ln = L[i];
+    if (isFence(ln)){                                            /* a code box */
+      const lang = (ln.match(/^\s*```\s*([\w+-]*)/) || [])[1] || '';
+      const buf = []; i++;
+      while (i < L.length && !isFence(L[i])) buf.push(L[i++]);
+      i++;
+      const code = buf.join('\n');
+      out.push({kind:'code', text: code,
+        html:'<div class="cb"><div class="cbh">' + esc(lang || 'text') + '</div><pre><code>' + esc(code) + '</code></pre></div>'});
+      continue;
+    }
+    if (isHead(ln)){
+      const m = ln.match(/^(#{1,6})\s+(.+?)\s*#*$/);
+      out.push({kind:'h', text: plain(m[2]), html:'<div class="h' + m[1].length + '">' + inline(m[2]) + '</div>'});
+      i++; continue;
+    }
+    if (/^\s*([-*_])\s*\1\s*\1[\s-*_]*$/.test(ln)){ out.push({kind:'hr', text:'', html:'<hr>'}); i++; continue; }
+    if (isTable(ln) && i + 1 < L.length && /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(L[i+1])){
+      const rows = [];
+      while (i < L.length && isTable(L[i])) rows.push(L[i++]);
+      const cut = r => r.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+      const head = cut(rows[0]), body = rows.slice(2).map(cut);
+      let t = '<table><thead><tr>' + head.map(c => '<th>' + inline(c) + '</th>').join('') + '</tr></thead><tbody>';
+      body.forEach(r => { t += '<tr>' + r.map(c => '<td>' + inline(c) + '</td>').join('') + '</tr>'; });
+      out.push({kind:'table', html:'<div class="tw">' + t + '</tbody></table></div>',
+        text: [head.join(', ')].concat(body.map(r => r.join(', '))).join('. ')});
+      continue;
+    }
+    if (isList(ln)){
+      const ord = /^\s*\d+[.)]\s+/.test(ln), items = [];
+      while (i < L.length && isList(L[i])){
+        items.push(L[i].replace(/^\s*([-*+]|\d+[.)])\s+/, '')); i++;
+        while (i < L.length && L[i].trim() && !isList(L[i]) && !isHead(L[i]) && !isFence(L[i]) && /^\s{2,}/.test(L[i]))
+          items[items.length - 1] += ' ' + L[i++].trim();
+      }
+      const tag = ord ? 'ol' : 'ul';
+      out.push({kind:'list', text: items.map(plain).join('. '),
+        html:'<' + tag + '>' + items.map(t => '<li>' + inline(t) + '</li>').join('') + '</' + tag + '>'});
+      continue;
+    }
+    if (/^\s*>\s?/.test(ln)){
+      const buf = [];
+      while (i < L.length && /^\s*>\s?/.test(L[i])) buf.push(L[i++].replace(/^\s*>\s?/, ''));
+      out.push({kind:'quote', text: plain(buf.join(' ')), html:'<blockquote>' + inline(buf.join('\n')) + '</blockquote>'});
+      continue;
+    }
+    if (!ln.trim()){ i++; continue; }
+    const buf = [];
+    while (i < L.length && L[i].trim() && !isHead(L[i]) && !isFence(L[i]) && !isList(L[i]) && !isTable(L[i]) && !/^\s*>\s?/.test(L[i]))
+      buf.push(L[i++]);
+    const para = buf.join('\n');
+    out.push({kind:'p', text: plain(para), html:'<p>' + inline(para) + '</p>'});
+  }
   return out;
 }
+function md(s){ return mdBlocks(s).map(b => b.html).join(''); }
 function tm(iso){ try { return new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); } catch(e){ return ''; } }
 function nearBottom(){ return list.scrollHeight - list.scrollTop - list.clientHeight < 160; }
 function add(m, scroll){
@@ -263,18 +360,42 @@ function add(m, scroll){
     sessions.textContent = (sessions.textContent ? sessions.textContent + '\n' : '') + tm(m.time) + '  ' + m.text;
   } else {
     const who = m.role === 'claude' ? 'CLAUDE' : 'MARKO';
+    const blocks = mdBlocks(m.text);
     el.innerHTML = '<div class="who">' + who + '<span class="tm">' + tm(m.time) + (m.project ? ' · ' + esc(m.project) : '') + '</span></div>'
-      + '<div class="body">' + md(m.text) + '</div>';
+      + '<div class="body">'
+      + blocks.map(b => '<div class="blk ' + b.kind + '"><div class="blkin">' + b.html + '</div></div>').join('')
+      + '</div>';
+    /* READ ON EVERY BLOCK (Marko, 17.9.2026: "Code box I have read, that's it"). Each block reads only
+       itself, through the draft plan, so the words light up inside that block and nowhere else. A code
+       box also gets COPY, because a block of commands is there to be used, not only heard. */
+    el.querySelectorAll('.blk').forEach((bl, n) => {
+      const b = blocks[n];
+      if (!b || !b.text) return;
+      const foot = document.createElement('div'); foot.className = 'blkfoot';
+      if (b.kind === 'code'){
+        const cp = document.createElement('button'); cp.className = 'rd sm ghost'; cp.textContent = 'COPY';
+        cp.onclick = ev => { ev.stopPropagation();
+          navigator.clipboard.writeText(b.text).then(() => { cp.textContent = 'COPIED'; setTimeout(() => cp.textContent = 'COPY', 1200); })
+            .catch(() => { cp.textContent = 'NO'; setTimeout(() => cp.textContent = 'COPY', 1200); }); };
+        foot.appendChild(cp);
+      }
+      const rd = document.createElement('button'); rd.className = 'rd sm'; rd.textContent = 'READ';
+      const st = document.createElement('span'); st.className = 'st';
+      rd.onclick = ev => { ev.stopPropagation();
+        readPlan('/api/read/draft/plan', {text: b.text}, bl.querySelector('.blkin'), rd, st); };
+      foot.appendChild(rd); foot.appendChild(st);
+      bl.appendChild(foot);
+    });
     if (m.role === 'claude') lastClaude = m.id;
     {   /* READ on every card, his and mine */
       const foot = document.createElement('div'); foot.className = 'foot';
-      const rd = document.createElement('button'); rd.className = 'rd'; rd.textContent = 'READ';
+      const rd = document.createElement('button'); rd.className = 'rd'; rd.textContent = 'READ ALL';
       rd.onclick = () => readMsg(m, el, rd);
       /* WHEREVER HE CLICKS, THE VOICE JUMPS THERE (Marko, 8.9.2026). A click in the card's text starts
          the reading at that sentence; while the card is being read its sentences handle the click. */
       el.querySelector('.body').addEventListener('click', e => {
         if (current && current.msgEl === el) return;
-        if (e.target.closest('a,pre,code')) return;
+        if (e.target.closest('a,pre,code,button,.blkfoot,table')) return;
         readMsg(m, el, rd, snippetAt(e));
       });
       const st = document.createElement('span'); st.className = 'st';
