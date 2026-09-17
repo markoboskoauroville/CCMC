@@ -1,11 +1,11 @@
 #!/bin/bash
-# install.sh, bring MantraChatClaude (the sister app) onto this Mac.
+# install.sh, bring ClaudeMantraChat (the sister app) onto this Mac.
 # Idempotent: run it again after a pull and nothing is duplicated.
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PY="${PYTHON:-$HOME/.pyenv/shims/python3}"
 [ -x "$PY" ] || PY="$(command -v python3)"
-echo "MantraChatClaude install from $HERE"
+echo "ClaudeMantraChat install from $HERE"
 echo "python: $PY"
 
 # 1. python and flask
@@ -60,18 +60,18 @@ EOF
 
 # 5. the companion note in ~/.claude/CLAUDE.md, once
 NOTE="$HOME/.claude/CLAUDE.md"
-if ! grep -q 'MantraChatClaude' "$NOTE" 2>/dev/null; then
+if ! grep -q 'ClaudeMantraChat' "$NOTE" 2>/dev/null; then
 cat >> "$NOTE" <<'EOF'
 
-# MantraChatClaude, the sister app
+# ClaudeMantraChat, the sister app
 
-MantraChatClaude at ~/Developer/MantraChatClaude is the companion app that follows Claude Code
+ClaudeMantraChat at ~/Developer/ClaudeMantraChat is the companion app that follows Claude Code
 into every project on this machine: a local page, MANTRA CHAT, at http://127.0.0.1:8825 that
 mirrors the session, speaks every card with Beatrice, and sends what Marko types back to the
-session. Read ~/Developer/MantraChatClaude/CLAUDE.md for how to behave with her: the session
+session. Read ~/Developer/ClaudeMantraChat/CLAUDE.md for how to behave with her: the session
 start greeting, the R and W letters, the inbox Monitor, the status line rule, never a key in
 the open. GitHub is the hub: every change to her is committed and pushed to
-https://github.com/markoboskoauroville/MantraChatClaude.
+https://github.com/markoboskoauroville/ClaudeMantraChat.
 EOF
 echo "note: added to $NOTE"
 else
