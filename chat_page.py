@@ -39,20 +39,25 @@ body.open #side{width:var(--gold);min-width:280px}
 .b.ghost{background:transparent;color:var(--ink);border:1px solid var(--slate)}
 #sessions{font:12px/1.6 Monaco,Menlo,monospace;color:var(--dim);white-space:pre-wrap}
 #main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
-/* the top bar hides; it slides down when the mouse touches the top edge, or stays when pinned */
-#hot{position:absolute;top:0;left:0;right:0;height:10px;z-index:14}
-#top{position:absolute;top:0;left:0;right:0;z-index:15;display:flex;align-items:center;gap:12px;padding:10px 16px;
-  border-bottom:1px solid var(--line);background:rgba(11,13,16,.96);transform:translateY(-100%);transition:transform .18s ease}
-#top.show,body.pinned #top{transform:none}
+/* THE TOP BAR IS ALWAYS THERE. Marko, 21.9.2026: "in the sister app we need to have at the top
+   always visible menu. Now it's collapsing. I want to have it always visible, make for smaller
+   font terminal font like a status line kind of thing, and at the top reconnect and clear."
+   So it is a LINE IN THE FLOW, not a plate that slides in over the cards: it never hides, there is
+   nothing to pin any more, and it reads like a terminal's status line - small, monospaced, quiet. */
+#hot{display:none}
+#top{position:relative;flex:0 0 auto;z-index:15;display:flex;align-items:center;gap:9px;padding:5px 12px;
+  border-bottom:1px solid var(--line);background:rgba(11,13,16,.96)}
 #top .t{cursor:pointer}
-#tog{background:transparent;border:0;padding:6px;cursor:pointer;color:var(--ink);border-radius:8px;display:flex}
+#tog{background:transparent;border:0;padding:3px;cursor:pointer;color:var(--ink);border-radius:6px;display:flex}
 #tog:hover{background:var(--slate)}
-#tog svg{width:24px;height:24px;display:block}
-#top .t{font:700 12px/1 Monaco,Menlo,monospace;letter-spacing:.16em;color:var(--amber)}
-#top #menub{font:700 10.5px/1 Monaco,Menlo,monospace;letter-spacing:.16em;color:var(--dim);
-  background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 11px;cursor:pointer}
-#top #menub:hover,#top #menub.on{color:var(--amber);border-color:var(--amber)}
-#menu{position:absolute;top:44px;right:16px;z-index:40;display:none;flex-direction:column;gap:2px;
+#tog svg{width:16px;height:16px;display:block}
+#top .t{font:700 10px/1 Monaco,Menlo,monospace;letter-spacing:.14em;color:var(--amber)}
+/* the bar's own buttons, RECONNECT and CLEAR beside MENU: the same small terminal lettering */
+#top #menub,#top .sb{font:700 9.5px/1 Monaco,Menlo,monospace;letter-spacing:.14em;color:var(--dim);
+  background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 9px;cursor:pointer}
+#top #menub:hover,#top #menub.on,#top .sb:hover{color:var(--amber);border-color:var(--amber)}
+#top .sb.danger:hover{color:#EF4444;border-color:#EF4444}
+#menu{position:absolute;top:32px;right:16px;z-index:40;display:none;flex-direction:column;gap:2px;
   background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;min-width:330px;
   box-shadow:0 18px 50px rgba(0,0,0,.55)}
 #menu.show{display:flex}
@@ -63,8 +68,8 @@ body.open #side{width:var(--gold);min-width:280px}
 #menu .mi.danger{color:#EF4444}
 #menu .mi.on{color:var(--amber)}
 #menu .mst{font:11px/1.4 Monaco,Menlo,monospace;color:var(--dim);padding:6px 12px 2px}
-#top .p{font:12px/1.3 Monaco,Menlo,monospace;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#dot{width:9px;height:9px;border-radius:50%;background:#B43C2A}
+#top .p{font:10px/1.3 Monaco,Menlo,monospace;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dot{width:7px;height:7px;border-radius:50%;background:#B43C2A}
 #dot.on{background:var(--good)}
 #list{flex:1;overflow:auto;padding:22px 16px 24px}
 .msg{max-width:900px;margin:0 auto 18px;padding:14px 18px;border-radius:10px;background:var(--panel);border:1px solid var(--line)}
@@ -267,23 +272,11 @@ try { FONT = parseInt(localStorage.getItem('mantra.font')) || 26; } catch(e){}
 try { if (localStorage.getItem('mantra.side') === '1') document.body.classList.add('open'); } catch(e){}
 const TOP_PAD = 14;
 
-/* ---------------------------------------------------------- top bar */
-const topbar = document.getElementById('top'), hot = document.getElementById('hot');
-let hideT = null;
-function showTop(){ topbar.classList.add('show'); if (hideT) clearTimeout(hideT); }
-function hideTopSoon(){ if (hideT) clearTimeout(hideT); hideT = setTimeout(() => topbar.classList.remove('show'), 700); }
-hot.addEventListener('mouseenter', showTop);
-topbar.addEventListener('mouseenter', showTop);
-topbar.addEventListener('mouseleave', hideTopSoon);
-const pinBtn = document.getElementById('pin');
-function paintPin(){ const on = document.body.classList.contains('pinned'); pinBtn.className = 'b ghost' + (on ? ' on' : ''); pinBtn.textContent = on ? 'THE BAR STAYS' : 'THE BAR HIDES ITSELF'; }
-pinBtn.onclick = () => {
-  document.body.classList.toggle('pinned'); paintPin();
-  try { localStorage.setItem('mantra.pin', document.body.classList.contains('pinned') ? '1' : '0'); } catch(e){}
-};
-try { if (localStorage.getItem('mantra.pin') === '1') document.body.classList.add('pinned'); } catch(e){}
-paintPin();
-showTop(); hideT = setTimeout(() => topbar.classList.remove('show'), 2500);
+/* ---------------------------------------------------------- top bar (21.9.2026: it always stays)
+   There is no hiding and no pinning left: the bar is part of the page, like a status line. What was
+   here before - the hot strip at the top edge, the timer that slid it away, THE BAR HIDES ITSELF in
+   the settings - is gone, and with it the localStorage key that remembered the choice. */
+const topbar = document.getElementById('top');
 
 /* ---------------------------------------------------------- side pane */
 document.getElementById('tog').onclick = () => {
@@ -1126,24 +1119,29 @@ async function call(path, body){
         return await r.json(); }
   catch(e){ return {ok:false, error:String(e)}; }
 }
-document.getElementById('mReconnect').onclick = async () => {
+async function doReconnect(){
   say('reading the terminal…');
   const r = await call('/api/reconnect');
   say(r.ok ? (r.cards + ' cards from ' + r.file) : ('nothing to read: ' + (r.error || '')));
-};
+  proj.title = r.ok ? (r.cards + ' cards from ' + r.file) : '';
+}
+document.getElementById('mReconnect').onclick = doReconnect;
+document.getElementById('bReconnect').onclick = () => { menuOpen(false); doReconnect(); };
 document.getElementById('mMirror').onclick = async () => {
   const on = !document.getElementById('mMirror').classList.contains('on');
   const r = await call('/api/mirror', {on: on});
   document.getElementById('mMirror').classList.toggle('on', !!r.on);
   say(r.on ? 'following the terminal' : 'not following');
 };
-document.getElementById('mClear').onclick = async () => {
-  /* THE ONE THING HERE THAT CANNOT BE UNDONE, so it is asked once, plainly. */
+/* THE ONE THING HERE THAT CANNOT BE UNDONE, so it is asked once, plainly - from the bar as well. */
+async function doClear(){
   if (!confirm('Throw the whole chat away?\n\nEvery card, the file they are kept in, and every audio file made for them. This cannot be undone.')) return;
   say('clearing…');
   const r = await call('/api/clear');
   say(r.ok ? 'cleared' : 'could not clear');
-};
+}
+document.getElementById('mClear').onclick = doClear;
+document.getElementById('bClear').onclick = () => { menuOpen(false); doClear(); };
 fetch('/health').then(r => r.json()).then(h => {
   document.getElementById('mMirror').classList.toggle('on', !!h.mirror);
   if (h.following) say('following ' + h.following);
@@ -1180,7 +1178,7 @@ HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 </div></aside>
 <main id="main">
 <div id="hot"></div>
-<div id="top"><button id="tog" title="Side pane">%(icon)s</button><span class="t" id="title">CCMC</span><span class="p" id="proj">waiting for a session</span><span id="dot" title="live"></span><button id="menub" title="This app">MENU</button></div>
+<div id="top"><button id="tog" title="Side pane">%(icon)s</button><span class="t" id="title">CCMC</span><span class="p" id="proj">waiting for a session</span><span id="dot" title="live"></span><button class="sb" id="bReconnect" title="read this session out of the terminal">RECONNECT</button><button class="sb danger" id="bClear" title="throw the whole chat away">CLEAR</button><button id="menub" title="This app">MENU</button></div>
 <!-- THE MENU (Marko, 21.9.2026: "there should be a menu at the top of the page which controls this
      app"). Three things and no more: pick the session up from the terminal, follow it or stop
      following it, and throw the whole chat away. CLEAR asks first, because it cannot be undone. -->
@@ -1211,7 +1209,6 @@ HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <a class="b ghost" href="https://claude.ai/new" target="_blank" rel="noopener">NEW CHAT ON CLAUDE.AI</a>
 <a class="b ghost" id="sesslink" href="#" target="_blank" rel="noopener" style="display:none">THIS SESSION ON CLAUDE.AI</a></div>
 <p id="pst"></p>
-<h3>THE TOP BAR</h3><div class="btns"><button class="b ghost" id="pin">THE BAR HIDES ITSELF</button></div>
 </div>
 </main>
 <div id="pill"><span class="grip"></span><button id="pb" title="previous sentence">⏮</button><button id="pp" title="play / pause">▶</button><button id="pn" title="next sentence">⏭</button>
