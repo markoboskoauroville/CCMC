@@ -19,7 +19,8 @@ CSS = r"""
 :root{--bg:#000000;--panel:#070707;--ink:#D1D1D1;--dim:#878787;--line:#242424;--slate:#3a3a3a;
 --strong:#FDFCFD;--hover:#121212;--code-bg:#0B0B0B;--code-head:#151515;--link:#BDC6F9;--good:#5AF78E;--mine:#0A0F0A;
 --strong:#000;--hover:#F1F1F1;--code-bg:#F4F4F4;--code-head:#EAEAEA;--link:#2744C7;--good:#00821F;--mine:#F2F6EE;
---amber:#BDC6F9;--sent:#EDEDED;--sent-fg:#101010;--wordbg:#D93025;--wordfg:#FFFFFF;--gold:38.2vw}
+--amber:#BDC6F9;--sent:#EDEDED;--sent-fg:#101010;--wordbg:#D93025;--wordfg:#FFFFFF;--gold:38.2vw;
+--card:#070707}
 *{box-sizing:border-box}
 /* THE TERMINAL'S OWN LOOK (Marko, 17.9.2026: "your Claude code has beautiful output. It has good
    colors. It has good font. I want to copy that to my Mantra chat, exactly as it is"). MEASURED from
@@ -46,7 +47,7 @@ body.open #side{width:var(--gold);min-width:280px}
    nothing to pin any more, and it reads like a terminal's status line - small, monospaced, quiet. */
 #hot{display:none}
 #top{position:relative;flex:0 0 auto;z-index:15;display:flex;align-items:center;gap:9px;padding:5px 12px;
-  border-bottom:1px solid var(--line);background:rgba(11,13,16,.96)}
+  border-bottom:1px solid var(--line);background:var(--bg)}
 #top .t{cursor:pointer}
 #tog{background:transparent;border:0;padding:3px;cursor:pointer;color:var(--ink);border-radius:6px;display:flex}
 #tog:hover{background:var(--slate)}
@@ -57,26 +58,31 @@ body.open #side{width:var(--gold);min-width:280px}
   background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 9px;cursor:pointer}
 #top #menub:hover,#top #menub.on,#top .sb:hover{color:var(--amber);border-color:var(--amber)}
 #top .sb.danger:hover{color:#EF4444;border-color:#EF4444}
+/* EVERY DROP-DOWN IS SOLID (Marko, 21.9.2026: "all my drop down menus in ccmc remove transparency
+   completely"). No translucency, no blur, no showing through: an opaque plate, its own colour from
+   the scheme, and a shadow to lift it off the page. */
 #menu{position:absolute;top:32px;right:16px;z-index:40;display:none;flex-direction:column;gap:2px;
-  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;min-width:330px;
+  background:var(--card);background-color:var(--card);opacity:1;backdrop-filter:none;
+  border:1px solid var(--line);border-radius:12px;padding:8px;min-width:330px;
   box-shadow:0 18px 50px rgba(0,0,0,.55)}
 #menu.show{display:flex}
 #menu .mi{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;
   padding:10px 12px;cursor:pointer;color:var(--ink);font:700 11.5px/1.2 Monaco,Menlo,monospace;letter-spacing:.1em}
 #menu .mi small{display:block;margin-top:5px;font:11px/1.35 Monaco,Menlo,monospace;letter-spacing:0;color:var(--dim)}
-#menu .mi:hover{background:rgba(255,255,255,.06)}
+#menu .mi:hover{background:var(--hover)}
 #menu .mi.danger{color:#EF4444}
 #menu .mi.on{color:var(--amber)}
 #menu .mst{font:11px/1.4 Monaco,Menlo,monospace;color:var(--dim);padding:6px 12px 2px}
 /* the voice switcher's list: the menu's manners, hung under VOICE instead of under MENU */
 #vmenu{position:absolute;top:32px;z-index:41;display:none;flex-direction:column;gap:1px;
-  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:7px;min-width:230px;
+  background:var(--card);background-color:var(--card);opacity:1;backdrop-filter:none;
+  border:1px solid var(--line);border-radius:12px;padding:7px;min-width:230px;
   box-shadow:0 18px 50px rgba(0,0,0,.55)}
 #vmenu.show{display:flex}
 #vmenu .vi{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;
   padding:8px 11px;cursor:pointer;color:var(--ink);font:700 10.5px/1.2 Monaco,Menlo,monospace;letter-spacing:.1em}
 #vmenu .vi small{display:block;margin-top:4px;font:10px/1.3 Monaco,Menlo,monospace;letter-spacing:0;color:var(--dim)}
-#vmenu .vi:hover{background:rgba(255,255,255,.06)}
+#vmenu .vi:hover{background:var(--hover)}
 #vmenu .vi.on{color:var(--amber)}
 #top .sb.on{color:var(--amber);border-color:var(--amber)}
 #top .p{font:10px/1.3 Monaco,Menlo,monospace;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -245,7 +251,8 @@ body.open #side{width:var(--gold);min-width:280px}
 #gear svg{width:20px;height:20px}
 #gear:hover,#gear.on{color:var(--amber);border-color:var(--amber)}
 #settings{display:none;position:absolute;right:16px;bottom:60px;width:min(92vw,440px);max-height:calc(100vh - 80px);overflow:auto;
-  background:var(--panel);border:1px solid var(--slate);border-radius:12px;padding:16px 16px 12px;z-index:30;box-shadow:0 14px 40px rgba(0,0,0,.14)}
+  background:var(--panel);background-color:var(--panel);opacity:1;backdrop-filter:none;
+  border:1px solid var(--slate);border-radius:12px;padding:16px 16px 12px;z-index:30;box-shadow:0 14px 40px rgba(0,0,0,.45)}
 #settings.on{display:block}
 #settings h3{font:700 10.5px/1 Monaco,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin:12px 0 8px}
 #settings h3:first-child{margin-top:0}
@@ -342,6 +349,11 @@ function applyScheme(k){
   r.setProperty('--line', c.line);      r.setProperty('--slate', c.slate);
   r.setProperty('--amber', c.accent);   r.setProperty('--strong', c.strong);
   r.setProperty('--hover', c.hover);    r.setProperty('--code-bg', c['code-bg']);
+  /* --card WAS NEVER SET, and that was the bug behind Marko's "remove transparency completely",
+     21.9.2026: every drop-down asked for background:var(--card), the variable did not exist in
+     :root or here, the declaration was therefore invalid, and the menus fell back to transparent -
+     the page showing straight through them. It is the panel colour of the scheme, solid. */
+  r.setProperty('--card', c.panel);
   r.setProperty('--code-head', c['code-head']); r.setProperty('--link', c.link);
   r.setProperty('--good', c.good);      r.setProperty('--mine', c.mine);
   r.setProperty('--sent', c.hover);     r.setProperty('--sent-fg', c.ink);
@@ -467,27 +479,14 @@ function add(m, scroll){
     /* READ ON EVERY BLOCK (Marko, 17.9.2026: "Code box I have read, that's it"). Each block reads only
        itself, through the draft plan, so the words light up inside that block and nowhere else. A code
        box also gets COPY, because a block of commands is there to be used, not only heard. */
-    el.querySelectorAll('.blk').forEach((bl, n) => {
-      const b = blocks[n];
-      if (!b || !b.text) return;
-      /* NO BUTTON, AND NOTHING THAT MOVES (Marko, 17.9.2026: "when I hover over the read button popping
-         up, it's so annoying because then the text is moving and everything is vibrating ... All I want
-         to do with these outputs from the chat is to read them. If I click ... it starts to read it").
-         The block IS the button. Hover only tints it; nothing is inserted, so no line ever shifts. The
-         controls are the floating pill, which already has previous, play, next, speed, size and close. */
-      const st = document.createElement('span'); st.className = 'st blkst';
-      bl.appendChild(st);
-      bl.addEventListener('click', ev => {
-        if (ev.target.closest('a')) return;
-        /* THE BLOCK WINS. The card's own body still listens, so a click inside a block used to start
-           TWO readings - the block's and the whole card's - and the second one's endReading() killed
-           the first before a note was heard. MEASURED in his browser: two readPlan calls per click,
-           /api/read/draft/plan then /api/read/373/plan (17.9.2026). */
-        ev.stopPropagation();
-        if (current && current.msgEl === bl.querySelector('.blkin')){ current.toggle(); return; }
-        readPlan('/api/read/draft/plan', {text: b.text}, bl.querySelector('.blkin'), null, st);
-      });
-    });
+    /* A CLICK READS THE WHOLE CARD, NOT THE PARAGRAPH IT LANDED ON. Marko, 21.9.2026: "please read
+       whole block of text when i click on it, now it read only one paragraph on which i click, that
+       is not desirable behaviour and should be removed."
+       Each block used to be its own reading: it caught the click, stopped it reaching the card, and
+       played that one paragraph and then stopped. That is gone. The card's own handler now takes
+       every click, so the reading starts at the sentence under his finger and CARRIES ON to the end
+       of the card - which is what "read the whole block of text" means. The blocks keep their hover
+       tint, because it shows him where the voice will start, and nothing else. */
     if (m.role === 'claude') lastClaude = m.id;
     {   /* THE TEXT IS THE BUTTON. Marko, 21.9.2026: "the read all button is unnecessary. Clicking on
            the text is reading it." So there is no READ ALL any more: the card's body is the button,
