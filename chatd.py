@@ -359,6 +359,11 @@ def message():
         role = 'system'
     if not text:
         return jsonify({'ok': False, 'error': 'empty'}), 400
+    # WITH THE MIRROR ON, THE HOOKS WOULD SAY IT TWICE. chat_hook.py's Stop posts the last answer
+    # and its UserPromptSubmit posts what he typed; the mirror has already put both up, out of the
+    # transcript, and a card arriving twice is the one thing a carbon copy must not do.
+    if MIRROR['on'] and str(d.get('source') or '') in ('transcript', 'terminal'):
+        return jsonify({'ok': True, 'skipped': 'the mirror already has it'})
     rec = append(role, text, session=d.get('session'), cwd=d.get('cwd'),
                  project=d.get('project'), source=d.get('source'))
     return jsonify({'ok': True, 'id': rec['id']})
