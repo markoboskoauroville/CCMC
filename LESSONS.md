@@ -111,3 +111,36 @@ What one day of building this taught, 2.9.2026. Each one cost something; none sh
   voice change answered "the sentence was lost". The job key carries engine, voice and model; a
   voice change drops the old voice's unfinished jobs; the page restarts the reading at the sentence
   it was at, in the new voice.
+
+## REMOTE CONTROL HAS NO LOCAL END — THE TRANSCRIPT IS THE MIRROR (21.9.2026)
+
+Marko: "change architecture completely. You need to work with remote control from Claude, so when I
+do /rc here, then this app is controlling the remote control protocol and showing everything as
+remote control, because the remote control is mirroring everything. I just need to add read to
+remote control and we are done. So it is a remote control client."
+
+**LOOKED FOR, and it is not there.** Remote Control is one outbound socket from the CLI to
+Anthropic: no listener on this Mac (`lsof` over every TCP port: nothing), no socket file, nothing in
+`~/.claude` but `remoteControlAtStartup: true`, and only `CLAUDE_CODE_BRIDGE_SESSION_ID` in the
+environment, which is a claude.ai URL and not a stream. A client would have to speak an
+undocumented protocol to Anthropic's servers with his credentials. That road is closed.
+
+**But what Remote Control mirrors is already on this disk.** Claude Code appends every session to
+`~/.claude/projects/<slug>/<session>.jsonl` as it happens — the prompts he typed, the answers, and
+every tool call with what it printed. That IS the terminal. So `transcript.py` reads it and turns it
+into cards, and `chatd` follows the newest file once a second and appends whatever is new.
+
+Same carbon copy, nothing to authenticate, nothing to reverse, and it keeps working when the network
+does not.
+
+Three things that matter in the reading:
+
+- **Thinking is folded away in the terminal, so it is folded away here.** A `tool_result` is not a
+  card of its own either: it belongs under the call that caused it, exactly as the terminal draws it.
+- **A mirrored card is not spoken before he asks.** `append()` pre-synthesises every answer of
+  Claude's for the cloned voice; with the mirror on, that would spend the voice on
+  `Bash(git status)` a hundred times over. Cards with `source: mirror` skip the queue; READ still
+  speaks them, which is the whole point of the page.
+- **A new session is not a replay.** When the file changes under the mirror (he started another
+  session) only what arrives from then on is shown. RECONNECT is the way to have the whole of it,
+  and it is his press, not ours.

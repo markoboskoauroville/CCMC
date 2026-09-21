@@ -16,6 +16,28 @@ Nothing here is invented. It was recombined on 2.9.2026 from code that already e
 Marko's other projects: the reader script's offline player, the Streamlit project's key ring
 and Speechify provider, the sample player's port handling.
 
+## The menu at the top, and the mirror (21.9.2026)
+
+MENU, top right of the page, holds three things and no more:
+
+- **RECONNECT** — Marko: *"sometimes when you are running and I run the CCMC after that, it doesn't
+  pick up what is going on in the terminal. Reconnect means starting from what is on the screen
+  displayed and then continue."* It reads the session's own transcript off disk and rebuilds the log
+  from it: every prompt, every answer, every tool call with the first lines of what it printed, in
+  the terminal's own order. The audio is not touched.
+- **MIRROR** — follows that file live, once a second, so the page is a carbon copy of the terminal
+  without a hook in the middle. On by default. (Remote Control has no local end to attach to;
+  `LESSONS.md` has the whole reason.)
+- **CLEAR THE WHOLE CHAT** — Marko: *"one clear command to clear the whole chat and start from the
+  scratch. Now I have chats from last year. It should clear it from the screen and from the memory,
+  also included all audio files generated for that chat."* Every card, the file they are kept in,
+  every wav and plan the voice made for them, and the teleprompter pages under `~/.tspeak/out`. It
+  asks once, because it cannot be undone. **His own microphone recordings are never touched.**
+
+**The log does not scroll under his hand any more** (*"only the window is not scrolling, I am
+scrolling it manually"*): a new card is appended where it belongs and the view stays where he put
+it, unless he is already standing at the bottom.
+
 ## The files
 
 | file | what |

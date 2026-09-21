@@ -49,6 +49,20 @@ body.open #side{width:var(--gold);min-width:280px}
 #tog:hover{background:var(--slate)}
 #tog svg{width:24px;height:24px;display:block}
 #top .t{font:700 12px/1 Monaco,Menlo,monospace;letter-spacing:.16em;color:var(--amber)}
+#top #menub{font:700 10.5px/1 Monaco,Menlo,monospace;letter-spacing:.16em;color:var(--dim);
+  background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 11px;cursor:pointer}
+#top #menub:hover,#top #menub.on{color:var(--amber);border-color:var(--amber)}
+#menu{position:absolute;top:44px;right:16px;z-index:40;display:none;flex-direction:column;gap:2px;
+  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;min-width:330px;
+  box-shadow:0 18px 50px rgba(0,0,0,.55)}
+#menu.show{display:flex}
+#menu .mi{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;
+  padding:10px 12px;cursor:pointer;color:var(--ink);font:700 11.5px/1.2 Monaco,Menlo,monospace;letter-spacing:.1em}
+#menu .mi small{display:block;margin-top:5px;font:11px/1.35 Monaco,Menlo,monospace;letter-spacing:0;color:var(--dim)}
+#menu .mi:hover{background:rgba(255,255,255,.06)}
+#menu .mi.danger{color:#EF4444}
+#menu .mi.on{color:var(--amber)}
+#menu .mst{font:11px/1.4 Monaco,Menlo,monospace;color:var(--dim);padding:6px 12px 2px}
 #top .p{font:12px/1.3 Monaco,Menlo,monospace;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #dot{width:9px;height:9px;border-radius:50%;background:#B43C2A}
 #dot.on{background:var(--good)}
@@ -417,6 +431,10 @@ function mdBlocks(src){
 function md(s){ return mdBlocks(s).map(b => b.html).join(''); }
 function tm(iso){ try { return new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); } catch(e){ return ''; } }
 function nearBottom(){ return list.scrollHeight - list.scrollTop - list.clientHeight < 160; }
+/* Marko, 21.9.2026: "the window is not scrolling, I am scrolling it manually". FOLLOW is what lets
+   the log jump to the newest card, and it is only ever true while he is already standing at the
+   bottom of it - so reading something from an hour ago is never interrupted by a card arriving. */
+const FOLLOW = true;
 function add(m, scroll){
   if (m.id <= lastId) return; lastId = m.id;
   const empty = document.getElementById('empty'); if (empty) empty.remove();
@@ -1084,12 +1102,52 @@ function connect(){
   es.onerror = () => dot.classList.remove('on');
   es.onmessage = ev => {
     try {
-      const m = JSON.parse(ev.data), el = add(m, nearBottom());
-      /* AUTO VOICE: a fresh answer of Claude (not one replayed after a reconnect) is spoken at once */
-      if (el && m.role === 'claude' && AUTO && Math.abs(Date.now() - new Date(m.time).getTime()) < 120000) speakCard(m, el);
+      const m = JSON.parse(ev.data);
+      /* CLEAR AND RECONNECT EMPTY EVERY OPEN PAGE, not only the one he pressed it on */
+      if (m && m.clear){ location.reload(); return; }
+      /* THE LOG DOES NOT MOVE UNDER HIM (Marko, 21.9.2026: "only the window is not scrolling, I am
+         scrolling it manually"). A card is appended where it belongs and the view stays where he
+         put it - unless he is already standing at the bottom, which is him asking to follow. */
+      const el = add(m, FOLLOW && nearBottom());
+      if (el && m.role === 'claude' && m.source !== 'mirror' && AUTO
+          && Math.abs(Date.now() - new Date(m.time).getTime()) < 120000) speakCard(m, el);
     } catch(e){}
   };
 }
+
+/* ---------------------------------------------------------- THE MENU (21.9.2026) */
+const menub = document.getElementById('menub'), menu = document.getElementById('menu'), mst = document.getElementById('mst');
+function menuOpen(on){ menu.classList.toggle('show', on); menub.classList.toggle('on', on); }
+menub.onclick = e => { e.stopPropagation(); menuOpen(!menu.classList.contains('show')); };
+document.addEventListener('click', e => { if (!menu.contains(e.target) && e.target !== menub) menuOpen(false); });
+function say(t){ mst.textContent = t; }
+async function call(path, body){
+  try { const r = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {})});
+        return await r.json(); }
+  catch(e){ return {ok:false, error:String(e)}; }
+}
+document.getElementById('mReconnect').onclick = async () => {
+  say('reading the terminal…');
+  const r = await call('/api/reconnect');
+  say(r.ok ? (r.cards + ' cards from ' + r.file) : ('nothing to read: ' + (r.error || '')));
+};
+document.getElementById('mMirror').onclick = async () => {
+  const on = !document.getElementById('mMirror').classList.contains('on');
+  const r = await call('/api/mirror', {on: on});
+  document.getElementById('mMirror').classList.toggle('on', !!r.on);
+  say(r.on ? 'following the terminal' : 'not following');
+};
+document.getElementById('mClear').onclick = async () => {
+  /* THE ONE THING HERE THAT CANNOT BE UNDONE, so it is asked once, plainly. */
+  if (!confirm('Throw the whole chat away?\n\nEvery card, the file they are kept in, and every audio file made for them. This cannot be undone.')) return;
+  say('clearing…');
+  const r = await call('/api/clear');
+  say(r.ok ? 'cleared' : 'could not clear');
+};
+fetch('/health').then(r => r.json()).then(h => {
+  document.getElementById('mMirror').classList.toggle('on', !!h.mirror);
+  if (h.following) say('following ' + h.following);
+}).catch(() => {});
 setFont(FONT);
 fetch('/api/messages?since=0&limit=300').then(r => r.json()).then(ms => {
   ms.forEach(m => add(m, false)); list.scrollTop = list.scrollHeight;
@@ -1122,7 +1180,16 @@ HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 </div></aside>
 <main id="main">
 <div id="hot"></div>
-<div id="top"><button id="tog" title="Side pane">%(icon)s</button><span class="t" id="title">CCMC</span><span class="p" id="proj">waiting for a session</span><span id="dot" title="live"></span></div>
+<div id="top"><button id="tog" title="Side pane">%(icon)s</button><span class="t" id="title">CCMC</span><span class="p" id="proj">waiting for a session</span><span id="dot" title="live"></span><button id="menub" title="This app">MENU</button></div>
+<!-- THE MENU (Marko, 21.9.2026: "there should be a menu at the top of the page which controls this
+     app"). Three things and no more: pick the session up from the terminal, follow it or stop
+     following it, and throw the whole chat away. CLEAR asks first, because it cannot be undone. -->
+<div id="menu">
+  <button class="mi" id="mReconnect">RECONNECT<small>read this session out of the terminal and start from what is on the screen</small></button>
+  <button class="mi" id="mMirror">MIRROR<small>follow the terminal live, every answer and every tool</small></button>
+  <button class="mi danger" id="mClear">CLEAR THE WHOLE CHAT<small>every card, the file they are kept in, and every audio file made for them</small></button>
+  <div class="mst" id="mst"></div>
+</div>
 <div id="list"></div>
 <div id="tp"><div id="tpgrip"><span class="dots"></span><span class="who">BEATRICE</span><span class="cnt" id="tpcnt"></span></div><div id="tpbox"><div id="tpdoc"></div></div><div id="tpline"></div><div id="tpcorner"></div>
 <div id="tpstatus"></div></div>

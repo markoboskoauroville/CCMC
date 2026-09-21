@@ -53,6 +53,7 @@ from page import sentences_of                  # noqa: E402
 from lastanswer import plain, chunk, sentences, _split_long   # noqa: E402
 from chat_page import page_html                # noqa: E402
 import voice as V                              # noqa: E402  the ears and the cloned voice
+import transcript as T                         # noqa: E402  Claude Code's own terminal, off disk
 
 HOST = '127.0.0.1'
 BASE = int(os.environ.get('TSPEAK_INBOX_PORT', '8825'))
@@ -73,6 +74,16 @@ SYNTH_LOCK = threading.Lock()
 SUBS = []
 MESSAGES = []
 STATE = {'port': BASE, 'pane': False}
+
+# THE MIRROR. Marko, 21.9.2026: "change architecture completely ... so it is a remote control
+# client ... the remote control is mirroring everything. I just need to add read to it and we are
+# done." Remote Control has no local end to attach to - the CLI holds one outbound socket to
+# Anthropic and there is no port, no file and no socket on this Mac to join (LOOKED FOR, 21.9.2026:
+# no listener, only CLAUDE_CODE_BRIDGE_SESSION_ID in the environment). But what Remote Control
+# mirrors is written here anyway: Claude Code appends every prompt, every answer and every tool
+# call to ~/.claude/projects/<slug>/<session>.jsonl as it happens. So the mirror follows THAT file,
+# which gives the same carbon copy with nothing to authenticate and nothing to reverse.
+MIRROR = {'on': True, 'path': '', 'done': 0, 'thread': None, 'at': 0.0}
 STARTED = int(__import__('time').time())   # this server's birth; the page reloads when it changes
 
 
@@ -113,7 +124,10 @@ def append(role, text, **meta):
             fh.write(json.dumps(rec, ensure_ascii=False) + '\n')
         for q in list(SUBS):
             q.put(rec)
-    if role == 'claude':
+    # A MIRRORED CARD IS NOT SPOKEN BEFORE HE ASKS. The mirror puts up every tool line the terminal
+    # shows, and pre-synthesising each of them would spend the voice on "Bash(git status)" a hundred
+    # times over. READ on the card still speaks it, which is the whole point of the page.
+    if role == 'claude' and meta.get('source') != 'mirror':
         try:
             sweep_cache(keep=mid)             # old cache goes before the new card is cached
             queue_card(mid)                   # the cloned voice starts on it before READ is pressed
@@ -168,6 +182,7 @@ def index():
 def health():
     return jsonify({'ok': True, 'port': STATE['port'], 'clients': len(SUBS),
                     'messages': len(MESSAGES), 'pane': STATE['pane'], 'inbox': INBOX,
+                    'mirror': MIRROR['on'], 'following': os.path.basename(MIRROR['path'] or ''),
                     'voice': who()})
 
 
@@ -177,6 +192,134 @@ def messages():
     limit = int(request.args.get('limit') or 300)
     out = [m for m in MESSAGES if m['id'] > since]
     return jsonify(out[-limit:])
+
+
+def _post_card(c):
+    """One card from the transcript into the log, without waking the voice for every tool line."""
+    append(c['role'], c['text'], source='mirror')
+
+
+def mirror_once():
+    """Append whatever the terminal has said since the last look. Returns how many cards went in."""
+    path = T.newest()
+    if not path:
+        return 0
+    cards = T.cards(path)
+    if path != MIRROR['path']:
+        # A NEW SESSION IS NOT A REPLAY. When the file changes under us (he started another
+        # session) only what arrives from now on is mirrored; RECONNECT is the way to have the
+        # whole of it, and it is his press, not ours.
+        MIRROR['path'], MIRROR['done'] = path, len(cards)
+        return 0
+    fresh = cards[MIRROR['done']:]
+    for c in fresh:
+        _post_card(c)
+    MIRROR['done'] = len(cards)
+    MIRROR['at'] = __import__('time').time()
+    return len(fresh)
+
+
+def mirror_loop():
+    while True:
+        try:
+            if MIRROR['on']:
+                mirror_once()
+        except Exception as e:                # noqa: BLE001  a mirror must never take the page down
+            log('mirror: %s' % e)
+        __import__('time').sleep(1.0)
+
+
+@app.route('/api/mirror', methods=['POST', 'OPTIONS'])
+def mirror():
+    if request.method == 'OPTIONS':
+        return ('', 204)
+    d = body()
+    if 'on' in d:
+        MIRROR['on'] = bool(d.get('on'))
+        if MIRROR['on']:                      # coming back on, start from now, not from the top
+            MIRROR['path'] = ''
+            mirror_once()
+    return jsonify({'ok': True, 'on': MIRROR['on'], 'path': MIRROR['path'], 'done': MIRROR['done']})
+
+
+@app.route('/api/reconnect', methods=['POST', 'OPTIONS'])
+def reconnect():
+    """START FROM WHAT IS ON THE SCREEN, AND THEN CONTINUE.
+
+    Marko, 21.9.2026: "sometimes when you are running and I run the CCMC after that, it doesn't
+    pick up what is going on in the terminal. Reconnect means starting from what is on the screen
+    displayed and then continue."
+
+    So: the cards go, the whole transcript of the session that is running is read back in their
+    place, and the mirror carries on from its end. The audio is NOT touched - that is CLEAR's job,
+    and a reconnect he presses ten times a day must not spend ten minutes of the voice again.
+    """
+    if request.method == 'OPTIONS':
+        return ('', 204)
+    path = T.newest(str((body() or {}).get('session') or ''))
+    if not path:
+        return jsonify({'ok': False, 'error': 'no transcript found'}), 404
+    cards = T.cards(path, limit=int((body() or {}).get('limit') or 400))
+    with LOCK:
+        del MESSAGES[:]
+        try:
+            if os.path.isfile(MSGS):
+                os.remove(MSGS)
+        except OSError:
+            pass
+        for q in list(SUBS):
+            q.put({'clear': True})
+    for c in cards:
+        _post_card(c)
+    MIRROR['path'] = path
+    MIRROR['done'] = len(T.cards(path))
+    log('reconnected: %d cards from %s' % (len(cards), os.path.basename(path)))
+    return jsonify({'ok': True, 'cards': len(cards), 'file': os.path.basename(path)})
+
+
+@app.route('/api/clear', methods=['POST', 'OPTIONS'])
+def clear():
+    """EVERYTHING GOES, AND IT REALLY GOES.
+
+    Marko, 21.9.2026: "there should be a menu at the top of the page which controls this app. For
+    now I just need one clear command to clear the whole chat and start from the scratch. Now I have
+    chats from last year. It should clear it from the screen and from the memory, also included all
+    audio files generated for that chat until now."
+
+    So three things in one press, and a half-done clear would be worse than none: the cards in this
+    process, the line-per-card file they are loaded from at every start, and every wav and plan the
+    voice ever made for them. The teleprompter pages under ~/.tspeak/out go with them, because they
+    are the same chat written out. His own microphone recordings (~/.tspeak/mic) are NOT touched:
+    they are his voice, not the chat's. Every open page is told, and reloads itself empty.
+    """
+    if request.method == 'OPTIONS':
+        return ('', 204)
+    gone = {'messages': len(MESSAGES), 'audio': 0, 'pages': 0}
+    with LOCK:
+        del MESSAGES[:]
+        try:
+            if os.path.isfile(MSGS):
+                os.remove(MSGS)
+        except OSError:
+            pass
+        for folder, key in ((AUDIO, 'audio'), (os.path.join(DIR, 'out'), 'pages')):
+            if not os.path.isdir(folder):
+                continue
+            for name in os.listdir(folder):
+                path = os.path.join(folder, name)
+                try:
+                    if os.path.isdir(path):
+                        shutil.rmtree(path)
+                    else:
+                        os.remove(path)
+                    gone[key] += 1
+                except OSError:
+                    pass
+        for q in list(SUBS):
+            q.put({'clear': True})
+    MIRROR['path'] = ''                      # start again from now, not from the top of the file
+    log('cleared: %d cards, %d audio folders, %d pages' % (gone['messages'], gone['audio'], gone['pages']))
+    return jsonify(dict(gone, ok=True))
 
 
 @app.route('/api/events', methods=['GET'])
@@ -1066,6 +1209,8 @@ def main():
         flask.cli.show_server_banner = lambda *a, **k: None
     except Exception:
         pass
+    MIRROR['thread'] = threading.Thread(target=mirror_loop, daemon=True)
+    MIRROR['thread'].start()
     log('chatd on http://%s:%d with %d messages' % (HOST, port, len(MESSAGES)))
     sys.stdout.write('chatd on http://%s:%d\n' % (HOST, port))
     sys.stdout.flush()
