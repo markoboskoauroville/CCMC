@@ -34,6 +34,11 @@ MENU, top right of the page, holds three things and no more:
 - **MIRROR** — follows that file live, once a second, so the page is a carbon copy of the terminal
   without a hook in the middle. On by default. (Remote Control has no local end to attach to;
   `LESSONS.md` has the whole reason.)
+- **VOICE** — the voice switcher on the bar, Marko's ask of 21.9.2026: *"one more command in the top
+  of CCMC, and this is a voice switcher. Since we are using voices, we need to have a voice switcher
+  there."* The button carries the name of whoever is talking, so the bar answers the question
+  without being opened, and the list under it holds Beatrice and every cloned voice on the Mac. A
+  reading already going on carries on from its own sentence in the new voice.
 - **CLEAR THE WHOLE CHAT** — Marko: *"one clear command to clear the whole chat and start from the
   scratch. Now I have chats from last year. It should clear it from the screen and from the memory,
   also included all audio files generated for that chat."* Every card, the file they are kept in,

@@ -68,6 +68,17 @@ body.open #side{width:var(--gold);min-width:280px}
 #menu .mi.danger{color:#EF4444}
 #menu .mi.on{color:var(--amber)}
 #menu .mst{font:11px/1.4 Monaco,Menlo,monospace;color:var(--dim);padding:6px 12px 2px}
+/* the voice switcher's list: the menu's manners, hung under VOICE instead of under MENU */
+#vmenu{position:absolute;top:32px;z-index:41;display:none;flex-direction:column;gap:1px;
+  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:7px;min-width:230px;
+  box-shadow:0 18px 50px rgba(0,0,0,.55)}
+#vmenu.show{display:flex}
+#vmenu .vi{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;
+  padding:8px 11px;cursor:pointer;color:var(--ink);font:700 10.5px/1.2 Monaco,Menlo,monospace;letter-spacing:.1em}
+#vmenu .vi small{display:block;margin-top:4px;font:10px/1.3 Monaco,Menlo,monospace;letter-spacing:0;color:var(--dim)}
+#vmenu .vi:hover{background:rgba(255,255,255,.06)}
+#vmenu .vi.on{color:var(--amber)}
+#top .sb.on{color:var(--amber);border-color:var(--amber)}
 #top .p{font:10px/1.3 Monaco,Menlo,monospace;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #dot{width:7px;height:7px;border-radius:50%;background:#B43C2A}
 #dot.on{background:var(--good)}
@@ -936,7 +947,41 @@ function paintVoice(){
     b.onclick = () => setVoice(v.name); voicesEl.appendChild(b);
   });
   if (VOICE.available === false) vst.textContent = 'Only Beatrice here: ' + (VOICE.why || 'MANTRA_VOICE is not on this Mac.');
+  paintVoiceMenu();
 }
+/* THE VOICE SWITCHER ON THE BAR (Marko, 21.9.2026: "one more command in the top of CCMC, and this
+   is a voice switcher. Since we are using voices, we need to have a voice switcher there"). The
+   button carries the name of whoever is talking, so the bar answers the question without being
+   opened; the list under it is the same set the gear's panel holds and calls the same setVoice,
+   so a reading in progress carries on from its own sentence in the new voice. */
+const vbtn = document.getElementById('bVoice'), vmenu = document.getElementById('vmenu');
+function voiceMenuOpen(on){
+  const want = on == null ? !vmenu.classList.contains('show') : on;
+  vmenu.classList.toggle('show', want); vbtn.classList.toggle('on', want);
+  if (want){ const r = vbtn.getBoundingClientRect(); vmenu.style.left = Math.max(8, r.left) + 'px'; }
+}
+function paintVoiceMenu(){
+  if (!vmenu || !vbtn) return;
+  vbtn.textContent = vlabel().toUpperCase();
+  vmenu.innerHTML = '';
+  const all = [{name: 'beatrice', label: 'Beatrice', note: 'Speechify, over the network'}]
+    .concat((VOICE.voices || []).map(n => ({name: n, note: 'cloned, on this Mac'})));
+  all.forEach(v => {
+    const on = v.name === 'beatrice' ? VOICE.engine === 'beatrice'
+                                     : (VOICE.engine === 'clone' && VOICE.voice === v.name);
+    const b = document.createElement('button');
+    b.className = 'vi' + (on ? ' on' : '');
+    b.innerHTML = '';
+    b.appendChild(document.createTextNode((v.label || v.name).toUpperCase()));
+    const sm = document.createElement('small'); sm.textContent = v.note; b.appendChild(sm);
+    b.onclick = () => { voiceMenuOpen(false); setVoice(v.name); };
+    vmenu.appendChild(b);
+  });
+}
+vbtn.onclick = () => voiceMenuOpen();
+document.addEventListener('pointerdown', e => {
+  if (vmenu.classList.contains('show') && !vmenu.contains(e.target) && !vbtn.contains(e.target)) voiceMenuOpen(false);
+});
 /* THE GEAR'S PANEL (Marko, 10.9.2026): every option of the sister, and nowhere else: the voice,
    AUTO VOICE, CLONE MY VOICE, claude.ai beside, the top bar. At the lower right corner of the entry
    band, where the hand already is. */
@@ -1189,7 +1234,13 @@ HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 </div></aside>
 <main id="main">
 <div id="hot"></div>
-<div id="top"><button id="tog" title="Side pane">%(icon)s</button><span class="t" id="title">CCMC</span><span class="p" id="proj">waiting for a session</span><span id="dot" title="live"></span><button class="sb" id="bReconnect" title="read this session out of the terminal">RECONNECT</button><button class="sb danger" id="bClear" title="throw the whole chat away">CLEAR</button><button id="menub" title="This app">MENU</button></div>
+<div id="top"><button id="tog" title="Side pane">%(icon)s</button><span class="t" id="title">CCMC</span><span class="p" id="proj">waiting for a session</span><span id="dot" title="live"></span><button class="sb" id="bVoice" title="who reads to you">VOICE</button><button class="sb" id="bReconnect" title="read this session out of the terminal">RECONNECT</button><button class="sb danger" id="bClear" title="throw the whole chat away">CLEAR</button><button id="menub" title="This app">MENU</button></div>
+<!-- THE VOICE SWITCHER (Marko, 21.9.2026: "one more command in the top of CCMC, and this is a
+     voice switcher. Since we are using voices, we need to have a voice switcher there"). The same
+     voices the gear's panel holds, one press away instead of three, and the bar says which one is
+     talking without being asked. A reading that is going on carries on from its own sentence in
+     the new voice, which is setVoice's promise from 10.9.2026 and costs nothing to keep here. -->
+<div id="vmenu"></div>
 <!-- THE MENU (Marko, 21.9.2026: "there should be a menu at the top of the page which controls this
      app"). Three things and no more: pick the session up from the terminal, follow it or stop
      following it, and throw the whole chat away. CLEAR asks first, because it cannot be undone. -->
