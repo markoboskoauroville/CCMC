@@ -71,8 +71,14 @@ body.open #side{width:var(--gold);min-width:280px}
 #top .p{font:10px/1.3 Monaco,Menlo,monospace;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #dot{width:7px;height:7px;border-radius:50%;background:#B43C2A}
 #dot.on{background:var(--good)}
-#list{flex:1;overflow:auto;padding:22px 16px 24px}
-.msg{max-width:900px;margin:0 auto 18px;padding:14px 18px;border-radius:10px;background:var(--panel);border:1px solid var(--line)}
+#list{flex:1;overflow-x:hidden;overflow-y:auto;padding:22px 16px 24px}
+/* THE WHOLE WINDOW IS THE PAGE. Marko, 21.9.2026: "I usually need to scroll expand to the usable
+   space of the web browser. Don't work in this constraints of this kind of tabs you are creating.
+   Try to avoid all scrolling, just expand to the possible web page real estate." The card was a
+   900px column in the middle of a 2560px screen, so every code block was folded into a third of the
+   glass and had to be dragged sideways to be read. The card now takes the width it is given; the
+   side pane, when it is open, simply gives it less. Nothing scrolls but the log itself. */
+.msg{max-width:100%;margin:0 0 18px;padding:14px 18px;border-radius:10px;background:var(--panel);border:1px solid var(--line)}
 .msg.marko{background:var(--mine);border-color:var(--line)}
 .msg.system{background:transparent;border:0;text-align:center;padding:4px;font:12px/1.4 Monaco,Menlo,monospace;color:var(--dim)}
 .msg .who{font:700 10.5px/1 Monaco,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin-bottom:8px;display:flex;gap:10px;align-items:baseline}
@@ -108,13 +114,16 @@ body.open #side{width:var(--gold);min-width:280px}
 .msg .body .cb{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--code-bg);margin:4px 0}
 .msg .body .cbh{font:600 10px/1 Monaco,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;
   color:var(--dim);padding:7px 12px;background:var(--code-head);border-bottom:1px solid var(--line)}
-.msg .body pre{margin:0;background:transparent;border:0;border-radius:0;padding:11px 13px;overflow:auto;
-  font:13.5px/1.55 Monaco,Menlo,monospace;color:var(--ink);white-space:pre}
+/* a long line WRAPS, it does not run off to the right: a sideways scrollbar inside a card is the
+   one thing he can never reach with the wheel. pre-wrap keeps every space and every newline the
+   terminal wrote; only the overflow is folded back onto the next line. */
+.msg .body pre{margin:0;background:transparent;border:0;border-radius:0;padding:11px 13px;overflow:hidden;
+  font:13.5px/1.55 Monaco,Menlo,monospace;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
 .msg .body code{background:var(--code-bg);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:14px;font-family:Monaco,Menlo,monospace;color:var(--amber)}
 .msg .body .cb code{border:0;padding:0;background:transparent}
 /* a real table */
-.msg .body .tw{overflow-x:auto;margin:2px 0}
-.msg .body table{border-collapse:collapse;font-size:15px;min-width:min(100%,420px)}
+.msg .body .tw{overflow-x:auto;margin:2px 0;max-width:100%}
+.msg .body table{border-collapse:collapse;font-size:15px;width:100%;min-width:0;table-layout:auto}
 .msg .body th,.msg .body td{border:1px solid var(--line);padding:6px 11px;text-align:left;vertical-align:top}
 .msg .body th{background:var(--code-head);color:var(--strong);font:600 11px/1.3 Monaco,Menlo,monospace;
   letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
@@ -185,7 +194,7 @@ body.open #side{width:var(--gold);min-width:280px}
 #grip{flex:0 0 14px;cursor:row-resize;display:flex;align-items:center;justify-content:center;user-select:none;touch-action:none}
 #grip i{display:block;width:56px;height:4px;border-radius:2px;background:var(--slate)}
 #grip:hover i,#grip.drag i{background:var(--amber)}
-#composer .in{max-width:860px;margin:0 auto;width:100%;flex:1;min-height:0;display:flex;flex-direction:column}
+#composer .in{max-width:100%;margin:0;width:100%;flex:1;min-height:0;display:flex;flex-direction:column}
 #rt{width:100%;flex:1;min-height:40px;background:var(--panel);color:var(--ink);border:1px solid var(--slate);border-radius:12px;
   padding:12px 14px;font:17px/1.5 inherit;resize:none;outline:none}
 #rt:focus{border-color:var(--amber)}

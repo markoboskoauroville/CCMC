@@ -144,3 +144,34 @@ Three things that matter in the reading:
 - **A new session is not a replay.** When the file changes under the mirror (he started another
   session) only what arrives from then on is shown. RECONNECT is the way to have the whole of it,
   and it is his press, not ours.
+
+## CLEAR HAS TO CUT THE TRANSCRIPT, OR IT CLEARS NOTHING
+
+Marko, 21.9.2026: *"when I press clear, it clears only the display. It doesn't actually clear the
+cache because when I press reconnect, everything is back."*
+
+He was right, and the cache was not ours. CLEAR did everything it promised — the cards in the
+process, `messages.jsonl`, every wav and plan, the teleprompter pages — but the chat does not only
+live there. Claude Code keeps the whole session in `~/.claude/projects/<slug>/<session>.jsonl`
+whatever the page does, and RECONNECT reads that file from the top. So a clear followed by a
+reconnect put the entire thrown-away chat straight back on the screen.
+
+**A delete that another program can undo is not a delete.** CLEAR now writes the moment it happened
+into `~/.tspeak/chat/cleared.txt` — UTC with a Z, the shape Claude Code stamps every record with, so
+the two compare as plain strings — and `transcript.cards(path, since=...)` drops every record at or
+before it. The watermark is read back at every start, so a restart cannot resurrect a cleared chat
+either. The mirror still counts the whole file, so what the session says AFTER the cut arrives
+normally: start from scratch, and then continue.
+
+## THE CARD IS AS WIDE AS THE WINDOW
+
+Marko, 21.9.2026: *"I usually need to scroll expand to the usable space of the web browser. Don't
+work in this constraints of this kind of tabs you are creating. Try to avoid all scrolling, just
+expand to the possible web page real estate."*
+
+The card was `max-width:900px; margin:0 auto` — a column in the middle of a 2560px screen, with a
+code block folded into a third of the glass and dragged sideways to be read. Two changes: the card
+takes the width it is given (`max-width:100%`), and `pre` wraps instead of scrolling
+(`white-space:pre-wrap; overflow-wrap:anywhere`), because a sideways scrollbar inside a card is the
+one thing he can never reach with the wheel. The side pane, when it is open, simply gives the card
+less. Nothing scrolls now but the log itself.

@@ -122,9 +122,20 @@ def _result_lines(text):
     return shown
 
 
-def cards(path, limit=0):
-    """The transcript as [{role, text}], oldest first, in the terminal's own order."""
+def cards(path, limit=0, since=''):
+    """The transcript as [{role, text}], oldest first, in the terminal's own order.
+
+    `since` is CLEAR's watermark: an ISO UTC stamp ('2026-09-21T09:12:33.000Z') written the moment
+    Marko threw the chat away. Claude Code keeps the whole session in the file whatever the page
+    does, so without this RECONNECT would read the thrown-away chat straight back in - which is
+    exactly the bug he found, 21.9.2026: "when I press clear, it clears only the display. It
+    doesn't actually clear the cache because when I press reconnect, everything is back." Every
+    record stamped at or before the watermark is gone for good; a record with no stamp at all
+    cannot be shown to be after it, so it goes too.
+    """
     recs = records(path)
+    if since:
+        recs = [r for r in recs if str(r.get('timestamp') or '') > since]
     results = {}
     for r in recs:
         if r.get('type') != 'user':

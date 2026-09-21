@@ -60,6 +60,7 @@ BASE = int(os.environ.get('TSPEAK_INBOX_PORT', '8825'))
 DIR = os.path.expanduser('~/.tspeak')
 CHAT = os.path.join(DIR, 'chat')
 MSGS = os.path.join(CHAT, 'messages.jsonl')
+CLEARFILE = os.path.join(CHAT, 'cleared.txt')   # CLEAR's watermark into Claude Code's own transcript
 AUDIO = os.path.join(CHAT, 'audio')
 INBOX = os.path.join(DIR, 'inbox')
 PORTFILE = os.path.join(DIR, 'port.txt')
@@ -84,6 +85,14 @@ STATE = {'port': BASE, 'pane': False}
 # call to ~/.claude/projects/<slug>/<session>.jsonl as it happens. So the mirror follows THAT file,
 # which gives the same carbon copy with nothing to authenticate and nothing to reverse.
 MIRROR = {'on': True, 'path': '', 'done': 0, 'thread': None, 'at': 0.0}
+
+# CLEAR'S WATERMARK. Marko, 21.9.2026: "when I press clear, it clears only the display. It doesn't
+# actually clear the cache because when I press reconnect, everything is back." He was right, and
+# the cache was not ours: the cards, the file and the audio all went, but Claude Code keeps the
+# whole session in its own .jsonl whatever the page does, and RECONNECT reads that file from the
+# top. So CLEAR now also writes the moment it happened, on disk so it survives a restart, and
+# RECONNECT reads nothing stamped at or before it. Everything really goes, and stays gone.
+CLEARED = {'at': ''}
 STARTED = int(__import__('time').time())   # this server's birth; the page reloads when it changes
 
 
@@ -108,6 +117,29 @@ def load():
                 MESSAGES.append(json.loads(line))
             except ValueError:
                 continue
+
+
+def mark_load():
+    """Read CLEAR's watermark back at every start, so a restart never resurrects a cleared chat."""
+    try:
+        if os.path.isfile(CLEARFILE):
+            CLEARED['at'] = open(CLEARFILE, encoding='utf-8').read().strip()
+    except OSError:
+        pass
+
+
+def mark_write():
+    """Stamp this moment as the new floor of the transcript. UTC with a Z, the shape Claude Code
+    writes into every record, so the two compare as plain strings."""
+    at = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+    CLEARED['at'] = at
+    try:
+        os.makedirs(CHAT, exist_ok=True)
+        with open(CLEARFILE, 'w', encoding='utf-8') as fh:
+            fh.write(at + '\n')
+    except OSError:
+        pass
+    return at
 
 
 def append(role, text, **meta):
@@ -259,7 +291,7 @@ def reconnect():
     path = T.newest(str((body() or {}).get('session') or ''))
     if not path:
         return jsonify({'ok': False, 'error': 'no transcript found'}), 404
-    cards = T.cards(path, limit=int((body() or {}).get('limit') or 400))
+    cards = T.cards(path, limit=int((body() or {}).get('limit') or 400), since=CLEARED['at'])
     with LOCK:
         del MESSAGES[:]
         try:
@@ -272,9 +304,12 @@ def reconnect():
     for c in cards:
         _post_card(c)
     MIRROR['path'] = path
-    MIRROR['done'] = len(T.cards(path))
-    log('reconnected: %d cards from %s' % (len(cards), os.path.basename(path)))
-    return jsonify({'ok': True, 'cards': len(cards), 'file': os.path.basename(path)})
+    MIRROR['done'] = len(T.cards(path))       # the mirror counts the WHOLE file, cleared or not,
+                                              # so what arrives next is what it has not seen
+    log('reconnected: %d cards from %s%s' % (len(cards), os.path.basename(path),
+                                             (' since %s' % CLEARED['at']) if CLEARED['at'] else ''))
+    return jsonify({'ok': True, 'cards': len(cards), 'file': os.path.basename(path),
+                    'since': CLEARED['at']})
 
 
 @app.route('/api/clear', methods=['POST', 'OPTIONS'])
@@ -295,6 +330,7 @@ def clear():
     if request.method == 'OPTIONS':
         return ('', 204)
     gone = {'messages': len(MESSAGES), 'audio': 0, 'pages': 0}
+    at = mark_write()                        # Claude Code's transcript is cut here and never re-read
     with LOCK:
         del MESSAGES[:]
         try:
@@ -318,8 +354,9 @@ def clear():
         for q in list(SUBS):
             q.put({'clear': True})
     MIRROR['path'] = ''                      # start again from now, not from the top of the file
-    log('cleared: %d cards, %d audio folders, %d pages' % (gone['messages'], gone['audio'], gone['pages']))
-    return jsonify(dict(gone, ok=True))
+    log('cleared: %d cards, %d audio folders, %d pages, transcript cut at %s'
+        % (gone['messages'], gone['audio'], gone['pages'], at))
+    return jsonify(dict(gone, ok=True, since=at))
 
 
 @app.route('/api/events', methods=['GET'])
@@ -1193,6 +1230,7 @@ def main():
     os.makedirs(CHAT, exist_ok=True)
     os.makedirs(INBOX, exist_ok=True)
     load()
+    mark_load()          # a chat thrown away stays thrown away across a restart
     port = pick_port(HOST, BASE)
     STATE['port'] = port
     with open(PORTFILE, 'w', encoding='utf-8') as fh:

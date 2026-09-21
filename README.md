@@ -33,6 +33,11 @@ MENU, top right of the page, holds three things and no more:
   also included all audio files generated for that chat."* Every card, the file they are kept in,
   every wav and plan the voice made for them, and the teleprompter pages under `~/.tspeak/out`. It
   asks once, because it cannot be undone. **His own microphone recordings are never touched.**
+  It also cuts Claude Code's own transcript at that moment and writes the cut to
+  `~/.tspeak/chat/cleared.txt`, so RECONNECT can never read the thrown-away chat back in — Marko,
+  21.9.2026: *"when I press clear, it clears only the display. It doesn't actually clear the cache
+  because when I press reconnect, everything is back."* A cleared chat stays cleared across a
+  restart of the server and of the Mac; what the session says after the cut still arrives.
 
 **The log does not scroll under his hand any more** (*"only the window is not scrolling, I am
 scrolling it manually"*): a new card is appended where it belongs and the view stays where he put
