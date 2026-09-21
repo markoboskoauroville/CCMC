@@ -111,3 +111,37 @@ The page in Chrome reconnects on its own; close the old app window if two are op
 * The Stop hook mirrors the whole visible text of a turn, interim lines included.
 * Speechify's API is text to speech only; there is no transcription endpoint. Transcription
   stays with AssemblyAI, per the manifest.
+
+## 10. What changed on 21.9.2026, and what a session must not undo
+
+**CLEAR cuts Claude Code's transcript too.** The cards, `~/.tspeak/chat/messages.jsonl` and the
+audio were never the whole chat: Claude Code keeps every session in
+`~/.claude/projects/<slug>/<session>.jsonl` whatever the page does, and RECONNECT reads that file.
+So CLEAR writes the moment it happened to **`~/.tspeak/chat/cleared.txt`** (UTC with a `Z`, the shape
+Claude Code stamps every record with, so the two compare as plain strings), the mark is read back in
+`main()` by `mark_load()`, and `transcript.cards(path, since=...)` drops every record at or before
+it. Without this, clear-then-reconnect puts the whole thrown-away chat back on screen.
+
+**His own words arrive in a wrapper.** Claude Code wraps a pasted or dictated prompt in
+`<pasted_content id="..."> … </pasted_content id="...">`. Both ends of the page used to throw away
+any user text beginning with `<`, a rule meant for system reminders, and his prompts went with it —
+two of five echoed in one session. **`transcript.typed()` opens the wrapper and strips the machinery
+by name** (`system-reminder`, `command-name`, `local-command-stdout`, `task-notification`, the IDE
+tags); anything still starting with `<` afterwards is an unknown wrapper and is still dropped.
+`transcript.cards()` and the `UserPromptSubmit` hook both use it. Do not reinstate a bare
+`startswith('<')` test.
+
+**Two roads, one card.** His words now reach the page by the hook (instantly) and by the mirror (a
+second later), and an answer comes by the Stop hook and the mirror both. `append()` drops an
+identical text from the same role inside thirty seconds. Removing that guard doubles every card.
+
+**The page.** `--card` must stay defined: every drop-down asks for `background:var(--card)`, and for
+a long time nothing defined it, so the declaration was invalid and the menus were transparent. It is
+set in `:root` and repainted by `applyScheme()` from the scheme's panel colour. The card is
+`max-width:100%` and `pre` wraps (`pre-wrap`, `overflow-wrap:anywhere`) — he cannot reach a sideways
+scrollbar inside a card. There is no READ ALL button: the card body is the button, and a click reads
+**the whole card** from the sentence clicked. Per-block reading was removed on his instruction; do
+not put it back.
+
+**The bar** holds VOICE (the switcher: Beatrice and every cloned voice, calling the same `setVoice`
+as the gear panel), RECONNECT, CLEAR and MENU.
