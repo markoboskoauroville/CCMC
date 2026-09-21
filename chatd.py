@@ -142,8 +142,28 @@ def mark_write():
     return at
 
 
+def _same_as_last(role, text):
+    """THE SAME CARD TWICE IS A BUG, NOT AN ECHO. What Marko types reaches the page down two roads
+    now - the UserPromptSubmit hook, which is instant, and the mirror a second later off Claude
+    Code's own transcript - and an answer can come by the Stop hook and the mirror both. Whichever
+    arrives first wins; an identical text from the same role inside half a minute is the other road
+    catching up, and is dropped."""
+    for rec in reversed(MESSAGES[-6:]):
+        if rec.get('role') != role or rec.get('text') != text:
+            continue
+        try:
+            when = datetime.datetime.fromisoformat(rec.get('time') or '')
+        except ValueError:
+            return rec
+        return rec if (datetime.datetime.now() - when).total_seconds() < 30 else None
+    return None
+
+
 def append(role, text, **meta):
     with LOCK:
+        twin = _same_as_last(role, text)
+        if twin is not None:
+            return twin                       # the other road got here first; the card is up already
         mid = (MESSAGES[-1]['id'] + 1) if MESSAGES else 1
         rec = {'id': mid, 'role': role, 'text': text,
                'time': datetime.datetime.now().isoformat(timespec='seconds')}

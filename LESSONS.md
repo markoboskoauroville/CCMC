@@ -175,3 +175,28 @@ takes the width it is given (`max-width:100%`), and `pre` wraps instead of scrol
 (`white-space:pre-wrap; overflow-wrap:anywhere`), because a sideways scrollbar inside a card is the
 one thing he can never reach with the wheel. The side pane, when it is open, simply gives the card
 less. Nothing scrolls now but the log itself.
+
+## HIS OWN WORDS ARRIVE IN A WRAPPER, AND THE WRAPPER WAS BEING FEARED
+
+Marko, 21.9.2026: *"when I type my prompt directly into the Claude code inside the terminal, it is
+not echoed in CCMC. I want everything echoed. It's like a remote view of this session."*
+
+The mirror was not broken. Claude Code wraps what he types in
+`<pasted_content id="…"> … </pasted_content id="…">` whenever it arrives as a paste or from another
+device — which is most of the time, because he dictates. Both ends of the page threw away any user
+text beginning with a `<`, a rule written to be rid of system reminders and hook noise, and his own
+words went out with them: five prompts in one session, two echoed.
+
+**Do not fear the wrapper, open it.** `transcript.typed()` unwraps a pasted block and strips the
+machinery by name (`system-reminder`, `command-name`, `local-command-stdout`, `task-notification`,
+the IDE tags), and both `transcript.cards()` and the `UserPromptSubmit` hook use it. Anything still
+starting with a `<` after that is a wrapper nobody has taught her yet, and is still dropped.
+
+Two more things fell out of it:
+
+- `if text and not text.startswith('<') and len(text) > 1 or text.upper() in ('R','W','T')` reads as
+  `(A and B and C) or D`. A one letter prompt was dropped unless it happened to be R, W or T — so
+  answering a numbered list with `1` was never echoed. **A single character is a prompt too.**
+- What he types now reaches the page down two roads, the hook instantly and the mirror a second
+  later, and an answer comes by the Stop hook and the mirror both. `append()` drops an identical
+  text from the same role inside thirty seconds: whichever road arrives first wins.

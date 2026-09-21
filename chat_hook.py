@@ -125,8 +125,18 @@ def main():
 
     url = alive()
     if event == 'prompt':
-        text = str(d.get('prompt') or '').strip()
-        if text and not text.startswith('<') and len(text) > 1 or text.upper() in ('R', 'W', 'T'):
+        # EVERYTHING HE TYPES IS ECHOED (Marko, 21.9.2026: "I want everything echoed. It's like a
+        # remote view of this session"). transcript.typed() opens the <pasted_content> wrapper that
+        # Claude Code puts round a paste, so his own words are no longer mistaken for machinery.
+        # The old line also read `A and B and C or D`, which is `(A and B and C) or D`: a one letter
+        # prompt was dropped unless it happened to be R, W or T. A single character is a prompt too.
+        try:
+            from transcript import typed
+        except ImportError:
+            def typed(x):
+                return str(x or '').strip()
+        text = typed(d.get('prompt'))
+        if text and not text.startswith('<'):
             post(url, '/api/message', dict(meta, role='marko', text=text, source='terminal'))
         return
 

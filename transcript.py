@@ -34,11 +34,37 @@ cards so the shape can be checked without the page.
 import glob
 import json
 import os
+import re
 import sys
 
 PROJECTS = os.path.expanduser('~/.claude/projects')
 HEAD_LINES = 6            # how much of a tool's output the terminal shows before it folds
 WIDTH = 160               # a long line is cut, as the terminal cuts it
+
+
+# WHAT HE ACTUALLY TYPED, OUT OF THE WRAPPERS ROUND IT. Marko, 21.9.2026: "when I type my prompt
+# directly into the Claude code inside the terminal, it is not echoed in CCMC. I want everything
+# echoed. It's like a remote view of this session." It was not the mirror that was broken: Claude
+# Code wraps what he types in <pasted_content id="..."> ... </pasted_content id="..."> whenever it
+# arrives as a paste or from a device, and both ends of the page threw away anything beginning with
+# a '<' to be rid of system reminders and hook noise. His own words went out with them. So the
+# wrappers are opened instead of being feared: a pasted block IS him, everything below is not.
+NOISE = ('system-reminder', 'command-name', 'command-message', 'command-args', 'command-contents',
+         'local-command-stdout', 'local-command-stderr', 'user-prompt-submit-hook',
+         'session-start-hook', 'task-notification', 'persisted-output', 'ide_opened_file',
+         'ide_selection', 'ide_diagnostics')
+
+
+def typed(raw):
+    """The words inside the wrappers: the paste opened, the machinery dropped."""
+    t = str(raw or '')
+    # the closing tag repeats the random id, so it is matched loosely and never by equality
+    t = re.sub(r'<pasted_content[^>]*>\s*(.*?)\s*</pasted_content[^>]*>', r'\1', t, flags=re.S)
+    t = re.sub(r'</?pasted_content[^>]*>', '', t)
+    for tag in NOISE:
+        t = re.sub(r'<%s[^>]*>.*?</%s\s*>' % (tag, tag), '', t, flags=re.S)
+        t = re.sub(r'</?%s[^>]*>' % tag, '', t, flags=re.S)
+    return t.strip()
 
 
 def newest(session=''):
@@ -154,8 +180,9 @@ def cards(path, limit=0, since=''):
                     text += b.get('text') or ''
                 elif isinstance(b, str):
                     text += b
-            text = text.strip()
-            # a tool result, a hook's noise or a system reminder is not something he typed
+            text = typed(text)
+            # a tool result, a hook's noise or a system reminder is not something he typed; what is
+            # left starting with a '<' is a wrapper nobody has taught us yet, and it is not him
             if not text or text.startswith('<') or r.get('isMeta'):
                 continue
             out.append({'role': 'marko', 'text': text})

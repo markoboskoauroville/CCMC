@@ -25,6 +25,12 @@ MENU, top right of the page, holds three things and no more:
   displayed and then continue."* It reads the session's own transcript off disk and rebuilds the log
   from it: every prompt, every answer, every tool call with the first lines of what it printed, in
   the terminal's own order. The audio is not touched.
+- **EVERYTHING HE TYPES IS ECHOED** — Marko: *"I want everything echoed. It's like a remote view of
+  this session."* Claude Code wraps a pasted or dictated prompt in `<pasted_content …>`, and the
+  page used to drop anything starting with a `<` along with the system reminders.
+  `transcript.typed()` opens the wrapper and strips only the machinery by name, so his words come
+  through — down two roads, the `UserPromptSubmit` hook instantly and the mirror a second later,
+  with an identical card inside thirty seconds dropped so nothing is said twice.
 - **MIRROR** — follows that file live, once a second, so the page is a carbon copy of the terminal
   without a hook in the middle. On by default. (Remote Control has no local end to attach to;
   `LESSONS.md` has the whole reason.)
