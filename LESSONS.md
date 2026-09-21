@@ -200,3 +200,15 @@ Two more things fell out of it:
 - What he types now reaches the page down two roads, the hook instantly and the mirror a second
   later, and an answer comes by the Stop hook and the mirror both. `append()` drops an identical
   text from the same role inside thirty seconds: whichever road arrives first wins.
+
+## THE TEXT IS THE BUTTON
+
+Marko, 21.9.2026: *"the read all button is unnecessary. Clicking on the text is reading it."*
+
+READ ALL sat in the foot of every card from the days when the click had to be aimed at something.
+Since 8.9.2026 a click anywhere in a card's text starts the reading at the sentence he clicked, and
+the floating pill holds play, pause, back, forward and speed, so the button was a second way to do
+a worse version of the same thing. It is gone; the body carries `cursor:pointer` so the card says
+what it is, and the foot keeps only the small status line. Everything that took the button as an
+argument already guarded it with `if (btn)`, except the AUTO VOICE path, which looked it up to
+decide whether a card could be spoken at all.

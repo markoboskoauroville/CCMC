@@ -84,7 +84,7 @@ body.open #side{width:var(--gold);min-width:280px}
 .msg .who{font:700 10.5px/1 Monaco,Menlo,monospace;letter-spacing:.14em;color:var(--amber);margin-bottom:8px;display:flex;gap:10px;align-items:baseline}
 .msg.marko .who{color:#00821f}
 .msg .who .tm{font-weight:400;color:var(--dim);letter-spacing:0}
-.msg .body{word-wrap:break-word;font:15px/1.6 Monaco,Menlo,ui-monospace,monospace}
+.msg .body{word-wrap:break-word;font:15px/1.6 Monaco,Menlo,ui-monospace,monospace;cursor:pointer}
 /* EVERY BLOCK IS ITS OWN BOX, WITH ITS OWN READ (Marko, 17.9.2026: "I want to have code boxes ...
    multiple code boxes for each of your steps ... Code box I have read ... the same aesthetics as here").
    The card is no longer one wall of text: a heading, a paragraph, a list, a table and a code block are
@@ -478,19 +478,21 @@ function add(m, scroll){
       });
     });
     if (m.role === 'claude') lastClaude = m.id;
-    {   /* READ on every card, his and mine */
+    {   /* THE TEXT IS THE BUTTON. Marko, 21.9.2026: "the read all button is unnecessary. Clicking on
+           the text is reading it." So there is no READ ALL any more: the card's body is the button,
+           a click starts the reading at the sentence he clicked, and the floating pill - play,
+           pause, back, forward, speed - is the whole of the control. The foot keeps only the small
+           status line the reading writes into. */
       const foot = document.createElement('div'); foot.className = 'foot';
-      const rd = document.createElement('button'); rd.className = 'rd'; rd.textContent = 'READ ALL';
-      rd.onclick = () => readMsg(m, el, rd);
       /* WHEREVER HE CLICKS, THE VOICE JUMPS THERE (Marko, 8.9.2026). A click in the card's text starts
          the reading at that sentence; while the card is being read its sentences handle the click. */
       el.querySelector('.body').addEventListener('click', e => {
         if (current && current.msgEl === el) return;
         if (e.target.closest('a,pre,code,button,.blkfoot,table')) return;
-        readMsg(m, el, rd, snippetAt(e));
+        readMsg(m, el, null, snippetAt(e));
       });
       const st = document.createElement('span'); st.className = 'st';
-      foot.appendChild(rd); foot.appendChild(st); el.appendChild(foot);
+      foot.appendChild(st); el.appendChild(foot);
     }
   }
   list.appendChild(el);
@@ -1048,9 +1050,9 @@ cancelBtn.onclick = () => stopMic(false);
 /* AUTO VOICE: an answer of Claude is spoken the moment it arrives, in the chosen voice. Never into an
    open microphone: while he talks it waits, and speaks once his words have gone. */
 function speakCard(m, el){
-  const btn = el.querySelector('.rd'); if (!btn) return;
+  /* no READ ALL button to find any more: the card itself is what is read */
   if (MIC !== 'idle'){ queued.push([m, el]); return; }
-  readMsg(m, el, btn);
+  readMsg(m, el, null);
 }
 /* CLONE MY VOICE: fifteen seconds of him reading anything, naturally. The model is shown the sample
    with every sentence it speaks; nothing is trained, nothing leaves the Mac. */
