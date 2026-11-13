@@ -18,7 +18,9 @@ from ring import classify, cool_seconds
 
 API = 'https://api.sws.speechify.com'
 VOICE = 'beatrice_32'
-MODEL = 'simba-3.2'          # _32 voices ride simba-3.2; anything else is a hard 400
+import speechify_model      # approved model from a small config, default simba-3.2 (modules/latest-model-at-start.md)
+MODEL = speechify_model.approved()
+speechify_model.detect()    # a newer candidate is found and reported, never used until approved          # _32 voices ride simba-3.2; anything else is a hard 400
 LIMIT = 2000                 # Speechify truncates and bills past this
 
 
